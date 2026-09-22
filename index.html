@@ -130,10 +130,9 @@
       color: #713f12; font-size: 0.88rem;
     }
 
-    /* Dental Chart View */
     .dental-chart-container {
       overflow-x: auto; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);
-      direction: ltr; /* لضمان ثبات الترتيب الطبي التشريحي يسار/يمين بدقة */
+      direction: ltr;
     }
     .arch-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); text-align: center; margin-bottom: 6px; direction: rtl; }
     .arch-row { display: flex; justify-content: center; gap: 4px; min-width: 760px; }
@@ -355,7 +354,6 @@
         </table>
       </div>
 
-      <!-- المخطط السريري FDI الموزع تشريحياً بالاتجاه الطبي المعتمد -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <h3 style="margin: 0;">مخطط الأسنان التشريحي (FDI Dental Chart)</h3>
@@ -618,7 +616,7 @@
     </div>
   </div>
 
-  <!-- Modal: الصيدلية السريرية المتطورة والوصفة الطبية (Rx) -->
+  <!-- Modal: الصيدلية السريرية المتطورة والوصفة الطبية (Rx) مع الحفظ والأرشيف -->
   <div class="modal" id="prescriptionModal">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-bottom: 12px;">
@@ -660,9 +658,18 @@
       </div>
       <textarea id="rxTextarea" rows="5" placeholder="الأدوية المختارة ستنزل هنا تلقائياً، ويمكنك تعديلها بحرية قبل الطباعة..."></textarea>
       
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-        <button class="btn" style="background:#0284c7;" onclick="printPrescription()">🖨️ طباعة الوصفة (A4 / طابعة حرارية)</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; gap: 6px;">
+          <button class="btn" style="background: var(--success);" onclick="savePrescriptionOnly()">💾 حفظ في ملف المريض</button>
+          <button class="btn" style="background: #0284c7;" onclick="printPrescription()">🖨️ حفظ وطباعة</button>
+        </div>
         <button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>
+      </div>
+
+      <!-- أرشيف الوصفات السابقة للمريض -->
+      <div style="margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 10px;">
+        <strong style="font-size: 0.85rem; color: var(--text-muted);">📜 الوصفات السابقة المسجلة لهذا المريض:</strong>
+        <div id="rxHistoryContainer" style="max-height: 150px; overflow-y: auto; margin-top: 6px;"></div>
       </div>
     </div>
   </div>
@@ -804,11 +811,11 @@
     // يسار الشاشة = يمين المريض (Quadrant 1 & 4)
     // يمين الشاشة = يسار المريض (Quadrant 2 & 3)
     // =========================================================================
-    const upperRightFDI = [18, 17, 16, 15, 14, 13, 12, 11]; // يمين المريض علوي
-    const upperLeftFDI  = [21, 22, 23, 24, 25, 26, 27, 28]; // يسار المريض علوي
+    const upperRightFDI = [18, 17, 16, 15, 14, 13, 12, 11];
+    const upperLeftFDI  = [21, 22, 23, 24, 25, 26, 27, 28];
 
-    const lowerRightFDI = [48, 47, 46, 45, 44, 43, 42, 41]; // يمين المريض سفلي
-    const lowerLeftFDI  = [31, 32, 33, 34, 35, 36, 37, 38]; // يسار المريض سفلي
+    const lowerRightFDI = [48, 47, 46, 45, 44, 43, 42, 41];
+    const lowerLeftFDI  = [31, 32, 33, 34, 35, 36, 37, 38];
 
     const statusLabels = {
       sound: "سليم", caries: "نخر", filling: "حشوة", fracture: "كسر",
@@ -1863,12 +1870,34 @@
       const firstTab = document.querySelector('.rx-ind-tab');
       if (firstTab) switchIndication('abscess', firstTab);
 
+      renderRxHistory(p);
+
       document.getElementById('prescriptionModal').style.display = 'flex';
     }
 
     function addRxText(entry) {
       const tx = document.getElementById('rxTextarea');
       tx.value = tx.value ? tx.value + '\n' + entry : entry;
+    }
+
+    function savePrescriptionOnly() {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p) return;
+
+      const content = document.getElementById('rxTextarea').value.trim();
+      if (!content) return alert('الرجاء كتابة أو اختيار الأدوية قبل الحفظ');
+
+      p.prescription = content;
+
+      if (!p.prescriptionsHistory) p.prescriptionsHistory = [];
+      p.prescriptionsHistory.unshift({
+        date: new Date().toLocaleDateString('ar-SY') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: content
+      });
+
+      syncSave();
+      renderRxHistory(p);
+      alert('تم حفظ الوصفة الطبية في ملف المريض بنجاح ✓');
     }
 
     function printPrescription() {
@@ -1879,7 +1908,15 @@
       if (!content) return alert('الرجاء اختيار أو كتابة الأدوية أولاً');
 
       p.prescription = content;
+
+      if (!p.prescriptionsHistory) p.prescriptionsHistory = [];
+      p.prescriptionsHistory.unshift({
+        date: new Date().toLocaleDateString('ar-SY') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: content
+      });
+
       syncSave();
+      renderRxHistory(p);
 
       document.getElementById('printRxPatientName').innerText = p.name;
       document.getElementById('printRxDate').innerText = new Date().toLocaleDateString('ar-SY');
@@ -1888,6 +1925,30 @@
       document.getElementById('printablePrescriptionArea').style.display = 'block';
       window.print();
       document.getElementById('printablePrescriptionArea').style.display = 'none';
+    }
+
+    function renderRxHistory(patient) {
+      const container = document.getElementById('rxHistoryContainer');
+      container.innerHTML = '';
+      const list = patient.prescriptionsHistory || [];
+
+      if (list.length === 0) {
+        container.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">لا توجد وصفات مؤرشفة سابقة.</span>';
+        return;
+      }
+
+      list.forEach((rx) => {
+        const div = document.createElement('div');
+        div.style.cssText = "background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; margin-bottom:6px; font-size:0.8rem; display:flex; justify-content:space-between; align-items:start;";
+        div.innerHTML = `
+          <div>
+            <b style="color:var(--primary);">${rx.date}:</b>
+            <div style="white-space:pre-wrap; margin-top:3px; color:#334155;">${rx.text}</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rxTextarea').value = \`${rx.text.replace(/`/g, '\\`')}\`">استعادة للتحرير</button>
+        `;
+        container.appendChild(div);
+      });
     }
 
     // ==========================================
@@ -1983,6 +2044,7 @@
         medical: document.getElementById('pMedical').value.trim(),
         quickNotes: '',
         prescription: '',
+        prescriptionsHistory: [],
         teeth: {},
         clinicalSessions: [],
         payments: [],
