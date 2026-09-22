@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عيادة اللؤلؤ السنية - النظام السحابي المتزامن</title>
+  <title>عيادة اللؤلؤ السنية - النظام الإكلينيكي والصيدلاني الشامل</title>
   
-  <!-- مكتبات Firebase الرسمية -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -37,7 +37,7 @@
     .btn {
       background: var(--primary); color: #fff; border: none; padding: 8px 14px;
       border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
-      display: inline-flex; align-items: center; gap: 4px;
+      display: inline-flex; align-items: center; gap: 4px; transition: 0.15s;
     }
     .btn:hover { background: var(--primary-dark); }
     .btn-secondary { background: #e2e8f0; color: #334155; }
@@ -55,18 +55,63 @@
     .sync-dot.connected { background: var(--success); box-shadow: 0 0 6px var(--success); }
 
     .container { display: grid; grid-template-columns: 310px 1fr; gap: 14px; }
-    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    @media (max-width: 950px) { .container { grid-template-columns: 1fr; } }
 
     .card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 12px; padding: 14px; margin-bottom: 14px;
     }
 
-    input, select, textarea {
+    input, textarea {
       width: 100%; padding: 8px 10px; margin-top: 4px; margin-bottom: 10px;
       border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;
     }
 
+    /* أزرار الاختيار السريع (Chips) */
+    .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 12px 0; }
+    .chip-btn {
+      background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 8px;
+      padding: 7px 12px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      color: #334155; transition: all 0.15s ease-in-out; user-select: none;
+    }
+    .chip-btn:hover { border-color: var(--primary); transform: translateY(-1px); }
+    .chip-btn.active {
+      background: var(--primary); color: white; border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+    }
+
+    .chip-btn[data-val="sound"].active       { background: #475569; border-color: #475569; }
+    .chip-btn[data-val="caries"].active      { background: #dc2626; border-color: #dc2626; }
+    .chip-btn[data-val="filling"].active     { background: #4f46e5; border-color: #4f46e5; }
+    .chip-btn[data-val="fracture"].active    { background: #ea580c; border-color: #ea580c; }
+    .chip-btn[data-val="restoration"].active { background: #9333ea; border-color: #9333ea; }
+    .chip-btn[data-val="aesthetic"].active   { background: #0d9488; border-color: #0d9488; }
+    .chip-btn[data-val="endo"].active        { background: #d97706; border-color: #d97706; }
+    .chip-btn[data-val="reendo"].active      { background: #db2777; border-color: #db2777; }
+    .chip-btn[data-val="crown"].active       { background: #16a34a; border-color: #16a34a; }
+    .chip-btn[data-val="missing"].active     { background: #64748b; border-color: #64748b; text-decoration: line-through; }
+
+    /* عداد أطوال الأقنية */
+    .canal-stepper-card {
+      background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px;
+      padding: 10px; margin-bottom: 8px;
+    }
+    .stepper-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .stepper-controls { display: flex; align-items: center; gap: 8px; }
+    .step-btn {
+      width: 34px; height: 34px; border-radius: 8px; border: 1px solid #cbd5e1;
+      background: #f8fafc; font-size: 1.1rem; font-weight: bold; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-btn:active { background: #e2e8f0; transform: scale(0.92); }
+    .length-display {
+      font-size: 1.15rem; font-weight: bold; color: #b45309; min-width: 65px;
+      text-align: center; background: #fffbeb; padding: 4px 8px; border-radius: 6px;
+      border: 1px solid #fde68a;
+    }
+    .slider-wheel { width: 100%; accent-color: #d97706; cursor: pointer; margin-top: 6px; }
+
+    /* قائمة المرضى */
     .patient-list { max-height: 600px; overflow-y: auto; }
     .patient-item {
       padding: 10px; border-radius: 8px; border: 1px solid var(--border);
@@ -80,37 +125,54 @@
 
     .quick-notes-banner {
       background: #fefce8; border: 1px solid #fef08a; border-radius: 8px;
-      padding: 10px; margin-bottom: 12px;
+      padding: 10px; margin-top: 10px;
     }
     .quick-notes-banner textarea {
       background: transparent; border: 1px dashed #ca8a04; margin: 4px 0 0 0;
       color: #713f12; font-size: 0.88rem;
     }
 
-    /* مخطط الأسنان FDI */
-    .dental-chart { overflow-x: auto; padding-bottom: 8px; }
-    .arch-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 8px; min-width: 650px; }
-    .tooth-box {
-      width: 44px; height: 60px; border-radius: 6px; border: 1px solid #94a3b8;
-      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-      padding: 3px; font-size: 0.75rem; cursor: pointer; user-select: none; transition: 0.15s; background: #fff;
+    /* مخطط الأسنان 3D */
+    .dental-chart-container {
+      overflow-x: auto; padding: 10px 0; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);
     }
-    .tooth-box:hover { transform: scale(1.06); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-    .tooth-number { font-weight: bold; }
-    .tooth-status-tag { font-size: 0.65rem; border-radius: 3px; padding: 1px 3px; font-weight: bold; text-align: center; }
+    .arch-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); text-align: center; margin-bottom: 4px; }
+    .arch-row { display: flex; justify-content: center; gap: 6px; min-width: 780px; padding: 4px; }
+    
+    .tooth-card {
+      display: flex; flex-direction: column; align-items: center; width: 44px;
+      cursor: pointer; transition: 0.15s; user-select: none;
+    }
+    .tooth-card:hover { transform: translateY(-3px) scale(1.05); }
+    .tooth-num { font-size: 0.75rem; font-weight: bold; margin-bottom: 2px; }
 
-    /* ألوان حالات السن */
-    .status-sound       { background: #f8fafc; color: #475569; border-color: #cbd5e1; }
-    .status-caries      { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
-    .status-filling     { background: #e0e7ff; color: #3730a3; border-color: #6366f1; }
-    .status-fracture    { background: #ffedd5; color: #9a3412; border-color: #f97316; }
-    .status-restoration { background: #f3e8ff; color: #6b21a8; border-color: #a855f7; }
-    .status-aesthetic   { background: #ccfbf1; color: #115e59; border-color: #14b8a6; }
-    .status-endo        { background: #fef3c7; color: #854d0e; border-color: #eab308; }
-    .status-reendo      { background: #fce7f3; color: #9d174d; border-color: #ec4899; }
-    .status-crown       { background: #dcfce7; color: #166534; border-color: #22c55e; }
-    .status-missing     { background: #e2e8f0; color: #64748b; border-color: #94a3b8; text-decoration: line-through; }
+    .tooth-svg-box {
+      width: 42px; height: 56px; position: relative; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+    }
+    .root-path { fill: #f1f5f9; stroke: #64748b; stroke-width: 1.2; stroke-linejoin: round; }
+    .surface-poly { fill: #ffffff; stroke: #94a3b8; stroke-width: 1; transition: fill 0.2s; }
+    .surface-poly:hover { fill: #bae6fd; }
 
+    .cond-sound .root-path { fill: #f8fafc; }
+    .cond-caries .surface-poly { fill: #fca5a5; }
+    .cond-caries .root-path { fill: #fee2e2; }
+    .cond-filling .surface-poly { fill: #c7d2fe; }
+    .cond-fracture .surface-poly { fill: #fed7aa; }
+    .cond-restoration .surface-poly { fill: #e9d5ff; }
+    .cond-aesthetic .surface-poly { fill: #99f6e4; }
+    .cond-endo .root-path { fill: #fde047; stroke: #b45309; stroke-width: 1.8; }
+    .cond-reendo .root-path { fill: #f472b6; stroke: #9d174d; stroke-width: 1.8; }
+    .cond-crown .surface-poly { fill: #86efac; stroke: #15803d; }
+    .cond-crown .root-path { fill: #bbf7d0; }
+    .cond-missing { opacity: 0.25; filter: grayscale(1); }
+
+    .tooth-status-pill {
+      font-size: 0.62rem; font-weight: bold; padding: 1px 4px; border-radius: 4px;
+      margin-top: 2px; text-align: center; white-space: nowrap; max-width: 44px;
+      overflow: hidden; text-overflow: ellipsis; background: #e2e8f0;
+    }
+
+    /* الأشعة */
     .xray-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
     .xray-thumb {
       width: 95px; height: 95px; object-fit: cover; border-radius: 8px;
@@ -124,6 +186,7 @@
       font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
 
+    /* الجداول */
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; }
     th, td { border: 1px solid var(--border); padding: 8px; text-align: right; }
     th { background: #f1f5f9; }
@@ -132,13 +195,14 @@
     .badge-in { color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
     .badge-out { color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
 
+    /* النوافذ المنبثقة */
     .modal {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
       align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 10px;
     }
     .modal-content {
       background: #fff; border-radius: 12px; padding: 18px; width: 100%;
-      max-width: 580px; max-height: 90vh; overflow-y: auto;
+      max-width: 820px; max-height: 92vh; overflow-y: auto;
     }
 
     .endo-box { background: #fffbeb; border: 1px dashed #d97706; padding: 10px; border-radius: 8px; margin-bottom: 12px; display: none; }
@@ -149,6 +213,43 @@
     }
     .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
     .patient-balance-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; margin-left: 6px; font-weight: bold; }
+
+    /* الصيدلية السريرية */
+    .rx-indication-bar {
+      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .rx-ind-tab {
+      background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;
+      padding: 6px 12px; font-size: 0.82rem; font-weight: bold; cursor: pointer;
+      white-space: nowrap; transition: 0.15s; color: #475569;
+    }
+    .rx-ind-tab:hover { background: #e0f2fe; border-color: var(--primary); }
+    .rx-ind-tab.active {
+      background: var(--primary); color: white; border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+    }
+
+    .drug-card {
+      background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 10px; margin-bottom: 8px; transition: 0.15s; cursor: pointer;
+      border-right: 4px solid var(--primary);
+    }
+    .drug-card:hover {
+      background: #f0f9ff; border-color: var(--primary); transform: translateX(-2px);
+    }
+    .drug-title { font-weight: bold; font-size: 0.9rem; color: #0f172a; display: flex; justify-content: space-between; }
+    .drug-dosage { font-size: 0.82rem; color: #1e293b; margin: 3px 0; font-weight: 500; }
+    .drug-note {
+      font-size: 0.74rem; color: #b45309; background: #fffbeb; padding: 4px 8px;
+      border-radius: 4px; border: 1px dashed #fde68a; margin-top: 4px; display: inline-block;
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printablePrescriptionArea, #printablePrescriptionArea * { visibility: visible; }
+      #printablePrescriptionArea { position: absolute; left: 0; top: 0; width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -156,7 +257,7 @@
   <header>
     <div>
       <h1>عيادة اللؤلؤ السنية</h1>
-      <small style="color: var(--text-muted)">النظام السحابي المتزامن</small>
+      <small style="color: var(--text-muted)">النظام السحابي الإكلينيكي والصيدلاني المتكامل</small>
     </div>
     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
       <div class="sync-status">
@@ -192,22 +293,25 @@
             </div>
             <div id="viewMedical" style="margin-top: 6px; font-size: 0.85rem; font-weight: bold; color: #b91c1c;"></div>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteCurrentPatient()">حذف الملف</button>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm btn-accent" onclick="openPrescriptionModal()">💊 الصيدلية والوصفة الطبية (Rx)</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCurrentPatient()">حذف الملف</button>
+          </div>
         </div>
 
-        <div class="quick-notes-banner" style="margin-top: 12px;">
+        <div class="quick-notes-banner">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <strong style="font-size: 0.85rem; color: #854d0e;">📌 ملاحظات سريرية سريعة (تتزامن لحظياً):</strong>
             <span id="quickNotesSavedIndicator" style="font-size: 0.75rem; color: #166534; display: none;">تمت المزامنة ✓</span>
           </div>
-          <textarea id="patientQuickNotes" rows="2" placeholder="اكتب هنا أي ملاحظة سريرية سريعة..." oninput="autoSaveQuickNotes()"></textarea>
+          <textarea id="patientQuickNotes" rows="2" placeholder="اكتب أي ملاحظة سريرية سريعة هنا..." oninput="autoSaveQuickNotes()"></textarea>
         </div>
       </div>
 
       <!-- المواعيد -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <h3 style="margin: 0;">مواعيد المريض</h3>
+          <h3 style="margin: 0;">مواعيد المريض (محددة بالساعة)</h3>
           <button class="btn" onclick="openAppointmentModal()">+ حجز موعد جديد</button>
         </div>
         <table>
@@ -224,25 +328,27 @@
         </table>
       </div>
 
-      <!-- مخطط الأسنان FDI -->
+      <!-- مخطط الأسنان التشريحي 3D بالوجوه السريرية -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <h3 style="margin: 0;">مخطط الأسنان السريري (FDI Chart)</h3>
-          <span style="font-size: 0.75rem; color: var(--text-muted);">اضغط على السن لتسجيل التشخيص وأطوال الجذور</span>
+          <h3 style="margin: 0;">مخطط الأسنان التشريحي (3D Anatomical FDI Chart)</h3>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">اضغط على أي سن لاختيار حالته وضبط أطوال الأقنية بالبكرة التفاعلية</span>
         </div>
-        <div class="dental-chart">
+        <div class="dental-chart-container">
+          <div class="arch-title">الفك العلوي (Maxilla)</div>
           <div class="arch-row" id="upperArch"></div>
-          <hr style="border: 0; border-top: 1px dashed var(--border); margin: 6px 0;">
+          <hr style="border: 0; border-top: 1px dashed var(--border); margin: 8px 0;">
+          <div class="arch-title">الفك السفلي (Mandible)</div>
           <div class="arch-row" id="lowerArch"></div>
         </div>
       </div>
 
-      <!-- صور الأشعة مع الضغط التلقائي -->
+      <!-- صور الأشعة -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
             <h3 style="margin: 0;">صور الأشعة والفحص السريري (X-Rays)</h3>
-            <small style="color:var(--success);">⚡ مضغوطة تلقائياً لحفظ الذاكرة وسرعة المزامنة</small>
+            <small style="color:var(--success);">⚡ ضغط فوري تلقائي لحفظ الذاكرة وسرعة المزامنة</small>
           </div>
           <label class="btn" style="cursor: pointer;">
             📷 إضافة صورة أشعة
@@ -252,7 +358,7 @@
         <div class="xray-grid" id="xrayGridContainer"></div>
       </div>
 
-      <!-- سجل الجلسات السريرية -->
+      <!-- السجل السريري المنفصل -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <h3 style="margin: 0; color: var(--primary);">📝 سجل الجلسات والإجراءات السريرية</h3>
@@ -263,7 +369,7 @@
             <tr>
               <th>التاريخ والساعة</th>
               <th>السن / المنطقة</th>
-              <th>الإجراء السريري والملاحظات الفنية</th>
+              <th>الإجراء السريري وتفاصيل العلاج</th>
               <th>حذف</th>
             </tr>
           </thead>
@@ -271,7 +377,7 @@
         </table>
       </div>
 
-      <!-- الحركات المالية -->
+      <!-- المعاملات والمدفوعات المالية المنفصلة -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
           <div>
@@ -296,10 +402,9 @@
       </div>
     </div>
   </div>
-
   <!-- Modal: المخطط الكامل للمواعيد -->
   <div class="modal" id="scheduleModal">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content">
       <h3 style="margin-top: 0; color: var(--primary);">📅 جدول المخطط الكامل لمواعيد العيادة</h3>
       <div class="filter-tabs">
         <button class="filter-btn active" onclick="setScheduleFilter('today', this)">اليوم</button>
@@ -339,7 +444,10 @@
         <div style="flex: 1;"><label>العمر:</label><input type="number" id="pAge"></div>
         <div style="flex: 1;">
           <label>الجنس:</label>
-          <select id="pGender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select>
+          <div class="chip-group" id="pGenderGroup" style="margin-top:4px;">
+            <div class="chip-btn active" data-val="ذكر" onclick="selectChip('pGenderGroup', this)">ذكر</div>
+            <div class="chip-btn" data-val="أنثى" onclick="selectChip('pGenderGroup', this)">أنثى</div>
+          </div>
         </div>
       </div>
       <label>السوابق المرضية والتحسسات:</label>
@@ -351,7 +459,7 @@
     </div>
   </div>
 
-  <!-- Modal: تعديل المريض -->
+  <!-- Modal: تعديل مريض -->
   <div class="modal" id="editPatientModal">
     <div class="modal-content">
       <h3 style="margin-top: 0; color: var(--primary);">✏️ تعديل بيانات المريض</h3>
@@ -361,7 +469,10 @@
         <div style="flex: 1;"><label>العمر:</label><input type="number" id="editPAge"></div>
         <div style="flex: 1;">
           <label>الجنس:</label>
-          <select id="editPGender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select>
+          <div class="chip-group" id="editPGenderGroup" style="margin-top:4px;">
+            <div class="chip-btn active" data-val="ذكر" onclick="selectChip('editPGenderGroup', this)">ذكر</div>
+            <div class="chip-btn" data-val="أنثى" onclick="selectChip('editPGenderGroup', this)">أنثى</div>
+          </div>
         </div>
       </div>
       <label>السوابق المرضية والحساسية:</label><textarea id="editPMedical" rows="2"></textarea>
@@ -372,7 +483,7 @@
     </div>
   </div>
 
-  <!-- Modal: حجز موعد -->
+  <!-- Modal: حجز موعد بالساعة -->
   <div class="modal" id="appointmentModal">
     <div class="modal-content">
       <h3 style="margin-top: 0;">حجز وتحديد موعد للمريض</h3>
@@ -380,11 +491,11 @@
       <label>الساعة المحددة بالدقيقة:</label><input type="time" id="aptTime" value="16:00">
       <label>الإجراء المتوقع / السن المعني:</label><input type="text" id="aptProcedure" placeholder="حشو جذور، تاج، قلع...">
       <label>حالة الموعد:</label>
-      <select id="aptStatus">
-        <option value="قادم">موعد قادم</option>
-        <option value="مكتمل">تم الحضور (مكتمل)</option>
-        <option value="ملغى">اعتذر المريض (ملغى)</option>
-      </select>
+      <div class="chip-group" id="aptStatusGroup">
+        <div class="chip-btn active" data-val="قادم" onclick="selectChip('aptStatusGroup', this)">موعد قادم</div>
+        <div class="chip-btn" data-val="مكتمل" onclick="selectChip('aptStatusGroup', this)">تم الحضور (مكتمل)</div>
+        <div class="chip-btn" data-val="ملغى" onclick="selectChip('aptStatusGroup', this)">اعتذر المريض (ملغى)</div>
+      </div>
       <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
         <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
         <button class="btn" onclick="saveAppointment()">حفظ الموعد</button>
@@ -415,22 +526,21 @@
     <div class="modal-content">
       <h3 style="margin-top: 0; color: #059669;">تسجيل حركة مالية جديدة</h3>
       <label>تاريخ الحركة:</label><input type="date" id="payDate">
-      <label>نوع الحركة:</label>
-      <select id="payType">
-        <option value="cost">تسجيل تكلفة معالجة متفق عليها</option>
-        <option value="payment">تسديد دفعة مقبوضة</option>
-      </select>
-      <div style="display: flex; gap: 8px;">
-        <div style="flex: 1.2;">
-          <label>العملة:</label>
-          <select id="payCurrency">
-            <option value="USD">دولار ($)</option>
-            <option value="TRY">تركي (₺)</option>
-            <option value="SYP">سوري (ل.س)</option>
-          </select>
-        </div>
-        <div style="flex: 1.5;"><label>المبلغ:</label><input type="number" id="payAmount" value="0"></div>
+      
+      <label>نوع الحركة المالية:</label>
+      <div class="chip-group" id="payTypeGroup">
+        <div class="chip-btn active" data-val="cost" onclick="selectChip('payTypeGroup', this)">تسجيل تكلفة متفق عليها (مطلوب)</div>
+        <div class="chip-btn" data-val="payment" onclick="selectChip('payTypeGroup', this)">تسديد دفعة مقبوضة (واصل)</div>
       </div>
+
+      <label>العملة:</label>
+      <div class="chip-group" id="payCurrencyGroup">
+        <div class="chip-btn active" data-val="USD" onclick="selectChip('payCurrencyGroup', this)">دولار أمريكي ($)</div>
+        <div class="chip-btn" data-val="TRY" onclick="selectChip('payCurrencyGroup', this)">ليرة تركية (₺)</div>
+        <div class="chip-btn" data-val="SYP" onclick="selectChip('payCurrencyGroup', this)">ليرة سورية (ل.س)</div>
+      </div>
+
+      <label>المبلغ:</label><input type="number" id="payAmount" value="0">
       <label>البيان / ملاحظات الدفعة:</label><input type="text" id="payNote" placeholder="دفعة أولى، تسديد حساب...">
       <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
         <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
@@ -439,36 +549,91 @@
     </div>
   </div>
 
-  <!-- Modal: السن واللبية -->
+  <!-- Modal: تعديل السن واللبية -->
   <div class="modal" id="toothModal">
     <div class="modal-content">
       <h3 id="modalToothTitle" style="margin-top: 0;"></h3>
-      <label>الحالة السريرية:</label>
-      <select id="tStatus" onchange="toggleEndoSection()">
-        <option value="sound">سليم (Sound)</option>
-        <option value="caries">نخر / تسوس (Caries)</option>
-        <option value="filling">حشوة (Restoration)</option>
-        <option value="fracture">كسر سن (Fractured Tooth)</option>
-        <option value="restoration">ترميم / بناء (Core Build-up)</option>
-        <option value="aesthetic">تجميل / فينير (Veneer)</option>
-        <option value="endo">معالجة لبية (Root Canal)</option>
-        <option value="reendo">إعادة معالجة لبية (Retreatment)</option>
-        <option value="crown">تاج / جسر (Crown)</option>
-        <option value="missing">مقلوع / غائب (Missing)</option>
-      </select>
-      <div id="endoSection" class="endo-box">
-        <strong style="color: #92400e; font-size: 0.85rem;">أطوال العمل وتوسيع الأقنية:</strong>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
-          <input type="text" id="canal1" placeholder="القناة 1 (MB: 20mm)">
-          <input type="text" id="canal2" placeholder="القناة 2 (ML: 19.5mm)">
-          <input type="text" id="canal3" placeholder="القناة 3 (D: 21mm)">
-          <input type="text" id="canal4" placeholder="القناة 4 (DB/MB2)">
-        </div>
+      
+      <label>الحالة السريرية للسن (اختر مباشرة بنقرة واحدة):</label>
+      <div class="chip-group" id="toothStatusChips">
+        <div class="chip-btn" data-val="sound" onclick="setToothStatusChip('sound')">سليم (Sound)</div>
+        <div class="chip-btn" data-val="caries" onclick="setToothStatusChip('caries')">نخر (Caries)</div>
+        <div class="chip-btn" data-val="filling" onclick="setToothStatusChip('filling')">حشوة (Restoration)</div>
+        <div class="chip-btn" data-val="fracture" onclick="setToothStatusChip('fracture')">كسر سن (Fractured)</div>
+        <div class="chip-btn" data-val="restoration" onclick="setToothStatusChip('restoration')">ترميم / بناء (Core)</div>
+        <div class="chip-btn" data-val="aesthetic" onclick="setToothStatusChip('aesthetic')">تجميل / فينير (Veneer)</div>
+        <div class="chip-btn" data-val="endo" onclick="setToothStatusChip('endo')">معالجة لبية (Root Canal)</div>
+        <div class="chip-btn" data-val="reendo" onclick="setToothStatusChip('reendo')">إعادة معالجة (Retreatment)</div>
+        <div class="chip-btn" data-val="crown" onclick="setToothStatusChip('crown')">تاج / جسر (Crown)</div>
+        <div class="chip-btn" data-val="missing" onclick="setToothStatusChip('missing')">مقلوع (Missing)</div>
       </div>
-      <label>ملاحظات السن:</label><textarea id="tNotes" rows="2"></textarea>
+
+      <div id="endoSection" class="endo-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong style="color: #92400e; font-size: 0.9rem;">⚡ عداد أطوال عمل الأقنية (Working Length Stepper):</strong>
+          <small style="color:#b45309;">اضغط + / - أو اسحب البكرة</small>
+        </div>
+        <div id="canalsContainer"></div>
+      </div>
+
+      <label>ملاحظات السن:</label><textarea id="tNotes" rows="2" placeholder="ملاحظات سريرية تخص هذا السن..."></textarea>
+      
       <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
         <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
         <button class="btn" onclick="saveToothState()">حفظ حالة السن</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: الصيدلية السريرية المتطورة والوصفة الطبية (Rx) -->
+  <div class="modal" id="prescriptionModal">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-bottom: 12px;">
+        <div>
+          <h3 style="margin: 0; color: var(--accent);">💊 الصيدلية السريرية والوصفات الطبية (Rx Suite)</h3>
+          <small style="color:var(--text-muted)">تصنيف حسب المشاكل السريرية + ملاحظات تذكيرية وموانع استخدام + حاسبة أطفال بالوزن</small>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="closeModals()">✕ إغلاق</button>
+      </div>
+
+      <!-- حاسبة الأطفال حسب الوزن -->
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="color:#1d4ed8; font-size:0.88rem;">👶 حاسبة جرعات الأطفال حسب الوزن:</strong>
+          <span style="font-weight:bold; color:#1e40af; background:#dbeafe; padding:2px 8px; border-radius:6px;" id="pediatricWeightDisplay">20 كغ</span>
+        </div>
+        <input type="range" id="pediatricWeightSlider" min="5" max="40" step="1" value="20" style="accent-color:#2563eb; width:100%; cursor:pointer; margin-top:6px;" oninput="updatePediatricDoses(this.value)">
+        <div class="chip-group" id="pediatricDoseChips" style="margin-bottom:0; margin-top:6px;"></div>
+      </div>
+
+      <!-- تبويبات المشاكل السريرية -->
+      <div class="rx-indication-bar" id="indicationTabsContainer">
+        <button class="rx-ind-tab active" onclick="switchIndication('abscess', this)">🔴 خراجات وإنتانات ذروية</button>
+        <button class="rx-ind-tab" onclick="switchIndication('perio', this)">🟠 لثة ونسج داعمة (ANUG)</button>
+        <button class="rx-ind-tab" onclick="switchIndication('sinus', this)">🟡 التهاب الجيب سني المنشأ</button>
+        <button class="rx-ind-tab" onclick="switchIndication('analgesia', this)">🟢 تسكين آلام والتهاب عصب</button>
+        <button class="rx-ind-tab" onclick="switchIndication('surgery_edema', this)">🔵 وذمة وتورم قلع جراحي</button>
+        <button class="rx-ind-tab" onclick="switchIndication('tmj', this)">🟣 مفصل صدغي وتشنج عضلات</button>
+        <button class="rx-ind-tab" onclick="switchIndication('prophylaxis', this)">⚪ وقاية التهاب الشغاف (AHA)</button>
+        <button class="rx-ind-tab" onclick="switchIndication('dry_socket', this)">🟤 سنخ جاف (Dry Socket)</button>
+        <button class="rx-ind-tab" onclick="switchIndication('aphthous_fungal', this)">🌸 قلاع، هربس وفطريات</button>
+        <button class="rx-ind-tab" onclick="switchIndication('pregnancy', this)">🤰 حمل وإرضاع (بروتوكول آمن)</button>
+        <button class="rx-ind-tab" onclick="switchIndication('supplements', this)">✨ فيتامينات وترميم لثة وأعصاب</button>
+      </div>
+
+      <!-- قائمة أدوية المشكلة السريرية المحددة مع الملاحظات السريرية -->
+      <div id="indicationDrugsContainer" style="max-height: 240px; overflow-y: auto; margin-bottom: 12px; padding: 2px;"></div>
+
+      <!-- مسودة نص الوصفة الطبية التفاعلية -->
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <label style="font-weight:bold; color:var(--primary); font-size:0.9rem;">📝 مسودة الوصفة الطبية الحالية (انقر على أي دواء لإضافته فوراً):</label>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rxTextarea').value = ''">مسح النص</button>
+      </div>
+      <textarea id="rxTextarea" rows="5" placeholder="الأدوية المختارة ستنزل هنا تلقائياً، ويمكنك تعديلها بحرية قبل الطباعة..."></textarea>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+        <button class="btn" style="background:#0284c7;" onclick="printPrescription()">🖨️ طباعة الوصفة (A4 / طابعة حرارية)</button>
+        <button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>
       </div>
     </div>
   </div>
@@ -496,16 +661,32 @@
     </div>
   </div>
 
-  <!-- Modal: معاينة الأشعة -->
+  <!-- Modal: تكبير الأشعة -->
   <div class="modal" id="imagePreviewModal" onclick="this.style.display='none'">
     <div style="max-width: 90%; max-height: 90%;">
       <img id="previewImageTag" src="" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
     </div>
   </div>
 
-  <script>
+  <!-- منطقة الطباعة الخاصة بالوصفة -->
+  <div id="printablePrescriptionArea" style="display:none; padding: 25px; font-family: system-ui, sans-serif; direction: rtl;">
+    <div style="text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 20px;">
+      <h2 style="margin: 0; color: #0284c7;">عيادة اللؤلؤ السنية</h2>
+      <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.9rem;">وصفة طبية - Medical Prescription (Rx)</p>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.95rem;">
+      <div>اسم المريض: <b id="printRxPatientName"></b></div>
+      <div>التاريخ: <b id="printRxDate"></b></div>
+    </div>
+    <div style="min-height: 250px; font-size: 1.05rem; line-height: 1.8; white-space: pre-wrap;" id="printRxContent"></div>
+    <div style="text-align: left; margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 15px;">
+      <b>توقيع وخاتم الطبيب:</b>
+      <div style="height: 50px;"></div>
+    </div>
+  </div>
+    <script>
     // ==========================================
-    // ⚙️ إعدادات الربط السحابي مع Firebase
+    // ⚙️ إعدادات Firebase
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyBko85Ru-pe_4jtEcqFDGuR1fKp9WBRPmE",
@@ -523,6 +704,7 @@
     let patients = [];
     let currentPatientId = null;
     let selectedToothNum = null;
+    let currentToothStatus = 'sound';
     let currentScheduleFilter = 'today';
 
     try {
@@ -530,7 +712,6 @@
       db = firebase.database();
       dbRef = db.ref('patients_data');
 
-      // الاستماع السحابي اللحظي
       dbRef.on('value', (snapshot) => {
         const val = snapshot.val();
         patients = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
@@ -547,7 +728,7 @@
       });
     } catch (e) {
       console.warn("Firebase fallback:", e);
-      patients = JSON.parse(localStorage.getItem('dental_clinic_data_v8') || '[]');
+      patients = JSON.parse(localStorage.getItem('dental_clinic_data_v12') || '[]');
       updateSyncIndicator(false);
     }
 
@@ -566,10 +747,31 @@
     }
 
     function syncSave() {
-      localStorage.setItem('dental_clinic_data_v8', JSON.stringify(patients));
+      localStorage.setItem('dental_clinic_data_v12', JSON.stringify(patients));
       if (dbRef) {
         dbRef.set(patients).catch(err => console.error("Cloud write error:", err));
       }
+    }
+
+    // أدوات اختيار الرقائق
+    function selectChip(groupId, element) {
+      const container = document.getElementById(groupId);
+      container.querySelectorAll('.chip-btn').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+    }
+
+    function getSelectedChipVal(groupId) {
+      const active = document.querySelector(`#${groupId} .chip-btn.active`);
+      return active ? active.getAttribute('data-val') : '';
+    }
+
+    function setSelectedChipVal(groupId, val) {
+      const container = document.getElementById(groupId);
+      if (!container) return;
+      container.querySelectorAll('.chip-btn').forEach(btn => {
+        if (btn.getAttribute('data-val') === val) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
     }
 
     // ترقيم FDI
@@ -636,80 +838,132 @@
       window.notesSaveTimer = setTimeout(() => { ind.style.display = 'none'; }, 1500);
     }
 
-    function openEditPatientModal() {
-      const p = patients.find(item => item.id === currentPatientId);
-      if (!p) return;
-      document.getElementById('editPName').value = p.name || '';
-      document.getElementById('editPPhone').value = p.phone || '';
-      document.getElementById('editPAge').value = p.age || '';
-      document.getElementById('editPGender').value = p.gender || 'ذكر';
-      document.getElementById('editPMedical').value = p.medical || '';
-      document.getElementById('editPatientModal').style.display = 'flex';
-    }
-
-    function saveEditedPatient() {
-      const p = patients.find(item => item.id === currentPatientId);
-      if (!p) return;
-      const newName = document.getElementById('editPName').value.trim();
-      if (!newName) return alert('يرجى كتابة الاسم');
-
-      p.name = newName;
-      p.phone = document.getElementById('editPPhone').value.trim();
-      p.age = document.getElementById('editPAge').value;
-      p.gender = document.getElementById('editPGender').value;
-      p.medical = document.getElementById('editPMedical').value.trim();
-
-      syncSave();
-      closeModals();
-      selectPatient(p.id);
-    }
-
+    // مخطط الأسنان التشريحي 3D
     function renderDentalChart(patient) {
       const upper = document.getElementById('upperArch');
       const lower = document.getElementById('lowerArch');
       upper.innerHTML = ''; lower.innerHTML = '';
 
-      upperTeethFDI.forEach(num => upper.appendChild(createToothElement(num, patient)));
-      lowerTeethFDI.forEach(num => lower.appendChild(createToothElement(num, patient)));
+      upperTeethFDI.forEach(num => upper.appendChild(createAnatomicalTooth(num, patient, true)));
+      lowerTeethFDI.forEach(num => lower.appendChild(createAnatomicalTooth(num, patient, false)));
     }
 
-    function createToothElement(num, patient) {
+    function createAnatomicalTooth(num, patient, isUpper) {
       const data = (patient.teeth && patient.teeth[num]) || { status: 'sound' };
-      const el = document.createElement('div');
-      el.className = `tooth-box status-${data.status}`;
+      const card = document.createElement('div');
+      card.className = `tooth-card cond-${data.status}`;
+
+      let rootPath = isUpper 
+        ? `<path class="root-path" d="M 12 25 C 10 10, 16 2, 21 2 C 26 2, 32 10, 30 25 Z" />`
+        : `<path class="root-path" d="M 12 31 C 10 46, 16 54, 21 54 C 26 54, 32 46, 30 31 Z" />`;
       
+      let crownY = isUpper ? 25 : 5;
+
+      let crownSvg = `
+        <g transform="translate(0, ${crownY})">
+          <polygon class="surface-poly" points="6,4 36,4 30,10 12,10" />
+          <polygon class="surface-poly" points="12,22 30,22 36,28 6,28" />
+          <polygon class="surface-poly" points="6,4 12,10 12,22 6,28" />
+          <polygon class="surface-poly" points="36,4 30,10 30,22 36,28" />
+          <rect class="surface-poly" x="12" y="10" width="18" height="12" rx="2" />
+        </g>
+      `;
+
       let badge = statusLabels[data.status] || 'سليم';
       if ((data.status === 'endo' || data.status === 'reendo') && data.canals && Object.values(data.canals).some(v => v)) {
         badge = '⚡ لبية';
       }
 
-      el.innerHTML = `
-        <span class="tooth-number">${num}</span>
-        <span class="tooth-status-tag">${badge}</span>
+      card.innerHTML = `
+        <span class="tooth-num">${num}</span>
+        <div class="tooth-svg-box">
+          <svg viewBox="0 0 42 56" width="42" height="56">
+            ${rootPath}
+            ${crownSvg}
+          </svg>
+        </div>
+        <span class="tooth-status-pill">${badge}</span>
       `;
-      el.onclick = () => openToothModal(num, data);
-      return el;
+
+      card.onclick = () => openToothModal(num, data);
+      return card;
     }
 
-    function toggleEndoSection() {
-      const status = document.getElementById('tStatus').value;
-      document.getElementById('endoSection').style.display = (status === 'endo' || status === 'reendo') ? 'block' : 'none';
+    // نافذة السن والعدادات
+    const defaultCanalsByTooth = {
+      molar_upper: ['MB', 'DB', 'Palatal', 'MB2'],
+      molar_lower: ['MB', 'ML', 'Distal', 'D2'],
+      premolar: ['Buccal', 'Lingual'],
+      anterior: ['Main Canal']
+    };
+
+    function getToothCanalNames(num) {
+      const n = parseInt(num);
+      const isMolar = [16,17,18, 26,27,28, 36,37,38, 46,47,48].includes(n);
+      const isUpper = (n >= 11 && n <= 28);
+      const isPremolar = [14,15, 24,25, 34,35, 44,45].includes(n);
+
+      if (isMolar) return isUpper ? defaultCanalsByTooth.molar_upper : defaultCanalsByTooth.molar_lower;
+      if (isPremolar) return defaultCanalsByTooth.premolar;
+      return defaultCanalsByTooth.anterior;
     }
 
     function openToothModal(num, data) {
       selectedToothNum = num;
       document.getElementById('modalToothTitle').innerText = `إجراءات السن رقم: ${num}`;
-      document.getElementById('tStatus').value = data.status || 'sound';
+      currentToothStatus = data.status || 'sound';
+      setToothStatusChip(currentToothStatus);
       document.getElementById('tNotes').value = data.notes || '';
 
-      const canals = data.canals || {};
-      document.getElementById('canal1').value = canals.c1 || '';
-      document.getElementById('canal2').value = canals.c2 || '';
-      document.getElementById('canal3').value = canals.c3 || '';
-      document.getElementById('canal4').value = canals.c4 || '';
-
-      toggleEndoSection();
+      buildCanalSteppers(num, data.canals || {});
       document.getElementById('toothModal').style.display = 'flex';
+    }
+
+    function setToothStatusChip(status) {
+      currentToothStatus = status;
+      setSelectedChipVal('toothStatusChips', status);
+      document.getElementById('endoSection').style.display = (status === 'endo' || status === 'reendo') ? 'block' : 'none';
+    }
+
+    function buildCanalSteppers(toothNum, savedCanals) {
+      const container = document.getElementById('canalsContainer');
+      container.innerHTML = '';
+      const canalNames = getToothCanalNames(toothNum);
+
+      canalNames.forEach((name, idx) => {
+        const key = `c${idx+1}`;
+        const savedVal = parseFloat(savedCanals[key]) || 20.0;
+
+        const card = document.createElement('div');
+        card.className = 'canal-stepper-card';
+        card.innerHTML = `
+          <div class="stepper-header">
+            <strong style="color:#0f172a; font-size:0.88rem;">قناة: ${name}</strong>
+            <div class="stepper-controls">
+              <button class="step-btn" onclick="adjustCanalLength('${key}', -0.5)">-</button>
+              <span class="length-display" id="disp_${key}">${savedVal.toFixed(1)} mm</span>
+              <button class="step-btn" onclick="adjustCanalLength('${key}', 0.5)">+</button>
+            </div>
+          </div>
+          <input type="range" class="slider-wheel" id="range_${key}" min="10" max="30" step="0.5" value="${savedVal}" 
+                 oninput="syncCanalRange('${key}', this.value)">
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function adjustCanalLength(key, delta) {
+      const range = document.getElementById(`range_${key}`);
+      let val = parseFloat(range.value) + delta;
+      if (val < 10) val = 10;
+      if (val > 30) val = 30;
+      range.value = val;
+      syncCanalRange(key, val);
+    }
+
+    function syncCanalRange(key, val) {
+      const floatVal = parseFloat(val);
+      document.getElementById(`disp_${key}`).innerText = `${floatVal.toFixed(1)} mm`;
     }
 
     function saveToothState() {
@@ -717,16 +971,16 @@
       if (!patient) return;
       if (!patient.teeth) patient.teeth = {};
 
-      const status = document.getElementById('tStatus').value;
-      const toothObj = { status: status, notes: document.getElementById('tNotes').value.trim() };
+      const toothObj = { status: currentToothStatus, notes: document.getElementById('tNotes').value.trim() };
 
-      if (status === 'endo' || status === 'reendo') {
-        toothObj.canals = {
-          c1: document.getElementById('canal1').value.trim(),
-          c2: document.getElementById('canal2').value.trim(),
-          c3: document.getElementById('canal3').value.trim(),
-          c4: document.getElementById('canal4').value.trim(),
-        };
+      if (currentToothStatus === 'endo' || currentToothStatus === 'reendo') {
+        const canalNames = getToothCanalNames(selectedToothNum);
+        toothObj.canals = {};
+        canalNames.forEach((name, idx) => {
+          const key = `c${idx+1}`;
+          const range = document.getElementById(`range_${key}`);
+          if (range) toothObj.canals[key] = parseFloat(range.value).toFixed(1);
+        });
       }
 
       patient.teeth[selectedToothNum] = toothObj;
@@ -735,9 +989,7 @@
       renderDentalChart(patient);
     }
 
-    // ==========================================
-    // ضغط الأشعة الذكي قبل التزامن السحابي
-    // ==========================================
+    // ضغط الأشعة
     function compressXrayImage(file, maxWidth = 1200, quality = 0.8) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -749,20 +1001,15 @@
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
-
             if (width > maxWidth) {
               height = Math.round((height * maxWidth) / width);
               width = maxWidth;
             }
-
             canvas.width = width;
             canvas.height = height;
-
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-            resolve(compressedDataUrl);
+            resolve(canvas.toDataURL('image/jpeg', quality));
           };
           img.onerror = (err) => reject(err);
         };
@@ -776,7 +1023,6 @@
 
       try {
         const compressedBase64 = await compressXrayImage(file, 1200, 0.8);
-
         const patient = patients.find(p => p.id === currentPatientId);
         if (!patient) return;
         if (!patient.xrays) patient.xrays = [];
@@ -786,7 +1032,6 @@
         renderXrays(patient);
       } catch (err) {
         alert('حدث خطأ أثناء معالجة صورة الأشعة');
-        console.error(err);
       } finally {
         e.target.value = '';
       }
@@ -824,7 +1069,7 @@
       document.getElementById('imagePreviewModal').style.display = 'flex';
     }
 
-    // سجل الجلسات السريرية
+    // 1. السجل السريري المنفصل
     function renderClinicalSessions(patient) {
       const tbody = document.getElementById('clinicalSessionsTableBody');
       tbody.innerHTML = '';
@@ -882,7 +1127,7 @@
       renderClinicalSessions(patient);
     }
 
-    // المعاملات والمدفوعات
+    // 2. دفتر السندات والمدفوعات المنفصلة
     function renderPayments(patient) {
       const tbody = document.getElementById('paymentsTableBody');
       tbody.innerHTML = '';
@@ -933,6 +1178,8 @@
       document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('payAmount').value = '';
       document.getElementById('payNote').value = '';
+      setSelectedChipVal('payTypeGroup', 'cost');
+      setSelectedChipVal('payCurrencyGroup', 'USD');
       document.getElementById('paymentModal').style.display = 'flex';
     }
 
@@ -946,10 +1193,10 @@
 
       patient.payments.unshift({
         date: document.getElementById('payDate').value,
-        type: document.getElementById('payType').value,
-        currency: document.getElementById('payCurrency').value,
+        type: getSelectedChipVal('payTypeGroup') || 'cost',
+        currency: getSelectedChipVal('payCurrencyGroup') || 'USD',
         amount: amt,
-        note: document.getElementById('payNote').value.trim()
+                note: document.getElementById('payNote').value.trim()
       });
 
       syncSave();
@@ -1001,7 +1248,7 @@
       const minutes = String(Math.ceil(now.getMinutes() / 5) * 5).padStart(2, '0');
       document.getElementById('aptTime').value = `${hours}:${minutes}`;
       document.getElementById('aptProcedure').value = '';
-      document.getElementById('aptStatus').value = 'قادم';
+      setSelectedChipVal('aptStatusGroup', 'قادم');
       document.getElementById('appointmentModal').style.display = 'flex';
     }
 
@@ -1014,7 +1261,7 @@
         date: document.getElementById('aptDate').value,
         time: document.getElementById('aptTime').value,
         procedure: document.getElementById('aptProcedure').value.trim(),
-        status: document.getElementById('aptStatus').value
+        status: getSelectedChipVal('aptStatusGroup') || 'قادم'
       };
 
       if (!apt.date || !apt.time) return alert('يرجى تحديد التاريخ والساعة');
@@ -1040,6 +1287,7 @@
       renderAppointments(patient);
     }
 
+    // جدول الرزنامة الشاملة للعيادة
     function openClinicScheduleModal() {
       document.getElementById('scheduleModal').style.display = 'flex';
       renderClinicSchedule();
@@ -1106,6 +1354,7 @@
       const startDateTime = new Date(`${dateStr}T${timeStr}:00`);
       const endDateTime = new Date(startDateTime.getTime() + (45 * 60000));
       const fmt = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+
       const title = encodeURIComponent(`عيادة أسنان: ${name}`);
       const details = encodeURIComponent(`المريض: ${name}\nالهاتف: ${phone || 'غير مسجل'}\nالإجراء: ${procedure || 'معالجة'}`);
       const dates = `${fmt(startDateTime)}/${fmt(endDateTime)}`;
@@ -1160,6 +1409,349 @@
       document.getElementById('remindersModal').style.display = 'flex';
     }
 
+    // ========================================================
+    // 📚 بنك الصيدلية السريرية السنية الشاملة والمصنفة
+    // ========================================================
+    const clinicalDentalPharmacopeia = {
+      abscess: [
+        {
+          name: "Augmentin 1g tab (Amoxicillin/Clavulanate)",
+          dose: "حبة واحدة كل 12 ساعة بعد الطعام لمدة 6 إلى 7 أيام.",
+          note: "الخيار الذهبي الأول للإنتانات الذروية والخراجات الفكية المحتوية على بكتيريا منتجة لإنزيم البيتا-لاكتاماز.",
+          text: "• Augmentin 1g tab : حبة واحدة كل 12 ساعة بعد الطعام لمدة 7 أيام."
+        },
+        {
+          name: "Amoxicillin 875/125mg tab",
+          dose: "حبة واحدة كل 12 ساعة بعد الطعام لمدة 6 أيام.",
+          note: "بديل مكافئ للأوغمانتين بجرعة موحدة لتقليل الاضطرابات الهضمية المعوية.",
+          text: "• Amoxicillin/Clavulanate 875/125mg : حبة واحدة كل 12 ساعة بعد الطعام لمدة 6 أيام."
+        },
+        {
+          name: "Clindamycin 300mg cap",
+          dose: "كبسولة واحدة كل 8 ساعات مع كأس ماء كبير لمدة 6 أيام.",
+          note: "⚠️ الخط الأول لمرضى حساسية البنسلين، ممتاز جداً لاختراق العظم الفكي. توقف فوراً إذا حدث إسهال مائي شديد (C. difficile).",
+          text: "• Clindamycin 300mg cap : كبسولة واحدة كل 8 ساعات بعد الأكل مع كأس ماء كبير لمدة 6 أيام (تحسس بنسلين)."
+        },
+        {
+          name: "Cefuroxime (Zinnat) 500mg tab",
+          dose: "حبة واحدة كل 12 ساعة بعد الطعام لمدة 6 أيام.",
+          note: "سيفالوسبورين الجيل الثاني. فعال في الإنتانات المختلطة. (لا يستخدم إذا كانت حساسية البنسلين من النوع التأقي المهدد للحياة).",
+          text: "• Zinnat 500mg (Cefuroxime) : قرص واحد كل 12 ساعة بعد الأكل لمدة 6 أيام."
+        }
+      ],
+
+      perio: [
+        {
+          name: "Metronidazole (Flagyl) 500mg tab",
+          dose: "حبة واحدة كل 8 ساعات بعد الطعام لمدة 6 أيام.",
+          note: "قاهر البكتيريا اللاهوائية في الجيوب حول السنية وداء النسج الداعمة. ⚠️ ممنوع قطعياً شرب الكحول ومراقبة مميعات الدم (وارفارين).",
+          text: "• Metronidazole (Flagyl) 500mg : حبة واحدة كل 8 ساعات بعد الأكل لمدة 6 أيام."
+        },
+        {
+          name: "Rodogyl (Spiramycin + Metronidazole)",
+          dose: "حبتان كل 12 ساعة مع الطعام لمدة 7 أيام.",
+          note: "مشاركة تآزرية مخصصة للنسيج اللثوي الفمي والعظم السنخي. تؤخذ مع كأس ماء كبير لتجنب الغثيان.",
+          text: "• Rodogyl tab : حبتان كل 12 ساعة بعد وجبات الطعام مع كأس ماء كبير لمدة 7 أيام."
+        },
+        {
+          name: "Doxycycline 100mg cap",
+          dose: "كبسولتان أول يوم معاً، ثم كبسولة واحدة يومياً لمدة 10 أيام.",
+          note: "يثبط إنزيم الكولاجيناز المخرب لأنسجة الرباط السني (MMP inhibition). يؤخذ مع كأس ماء بوضعية الجلوس، ممنوع تحت سن 8 سنوات والحوامل.",
+          text: "• Doxycycline 100mg cap : كبسولتان أول يوم، ثم كبسولة واحدة يومياً بعد الغداء لمدة 10 أيام."
+        },
+        {
+          name: "Chlorhexidine 0.12% Mouthwash",
+          dose: "مضمضة 15 مل لمدة دقيقة واحدة مرتين يومياً لمدة 10 إلى 14 يوماً.",
+          note: "المعيار الذهبي الكيميائي للسيطرة على اللويحة. يستخدم بعد تفريش الأسنان بنصف ساعة لتجنب تعطيله بمعجون الأسنان.",
+          text: "• Chlorhexidine Gluconate 0.12% : مضمضة 15 مل مرتين يومياً بعد تفريش الأسنان بنصف ساعة لمدة 10 أيام."
+        }
+      ],
+
+      sinus: [
+        {
+          name: "Augmentin 1g + Metronidazole 500mg (بروتوكول الجيب الفكي)",
+          dose: "أوغمانتين حبة كل 12 ساعة + فلاجيل حبة كل 8 ساعات لمدة 10 أيام.",
+          note: "التغطية الشاملة للجراثيم الهوائية واللاهوائية في حالات الانثقاب الجيبي الفكي الفموي (OAC) أو التهاب الجيب سني المنشأ.",
+          text: "• Augmentin 1g : حبة كل 12 ساعة بعد الطعام لمدة 10 أيام.\n• Metronidazole 500mg : حبة كل 8 ساعات بعد الطعام لمدة 10 أيام."
+        },
+        {
+          name: "Otrivin 0.1% Nasal Spray (Xylometazoline)",
+          dose: "بخة في كل فتحة أنف مرتين يومياً لمدة 4 إلى 5 أيام كحد أقصى.",
+          note: "مزيل احتقان لفتح فغرة الجيب الفكي وتصريف المفرزات. ⚠️ لا تتجاوز 5 أيام لتجنب التهاب الأنف الارتدادي (Rhinitis Medicamentosa).",
+          text: "• Otrivin 0.1% Nasal Spray : بخة في كل طرف أنفي مرتين يومياً لمدة 5 أيام فقط."
+        }
+      ],
+
+      analgesia: [
+        {
+          name: "Ibuprofen 600mg tab",
+          dose: "حبة واحدة كل 8 ساعات بعد وجبة الطعام عند اللزوم.",
+          note: "المسكن الأول المفضل لآلام لب الأسنان وجراحة الفم. مضاد التهاب غير ستيروئيدي قوي يثبط البروستاغلاندينات.",
+          text: "• Ibuprofen 600mg tab : قرص واحد كل 8 ساعات بعد الطعام عند اللزوم (الحد الأقصى 2400 ملغ/يوم)."
+        },
+        {
+          name: "Cataflam 50mg tab (Diclofenac Potassium)",
+          dose: "حبة واحدة كل 8 ساعات بعد الأكل عند اللزوم.",
+          note: "ملح البوتاسيوم سريع الامتصاص، يبدأ مفعوله خلال 20 دقيقة. مثالي لألم النخر الحاد وألم ما بعد المعالجة اللبية.",
+          text: "• Cataflam 50mg tab : قرص واحد كل 8 ساعات بعد الطعام عند اللزوم."
+        },
+        {
+          name: "Ketorolac (Toradol) 10mg tab",
+          dose: "حبة واحدة كل 6-8 ساعات عند الألم الشديد فقط (الحد الأقصى 40 ملغ/يوم).",
+          note: "⚠️ قوة تسكينية تضاهي المسكنات المركزية. يمنع استخدامه لأكثر من 5 أيام بالمطلق لتجنب القرحة الهضمية أو السمية الكلوية.",
+          text: "• Ketorolac 10mg tab : قرص واحد كل 8 ساعات عند اشتداد الألم لمدة لا تتجاوز 4 أيام."
+        },
+        {
+          name: "Paracetamol 1g tab",
+          dose: "حبة واحدة كل 6 إلى 8 ساعات عند اللزوم (الحد الأقصى 4 غرامات/يوم).",
+          note: "المسكن الأكثر أماناً لمرضى القرحة المعدية، الربو، اعتلال الكلى، والحوامل. خافض حرارة ممتاز لكنه ضعيف كمضاد وذمة.",
+          text: "• Paracetamol 1g tab : قرص واحد كل 6 إلى 8 ساعات عند اللزوم."
+        },
+        {
+          name: "Ibuprofen 400mg + Paracetamol 500mg (مشاركة تآزرية مذهلة)",
+          dose: "يؤخذان معاً كل 8 ساعات بعد الطعام عند الآلام المستعصية.",
+          note: "أثبتت الدراسات السريرية أن مشاركة البروفين مع السيتامول تفوق التسكين بالمركبات الأفيونية مع آثار جانبية أقل بكثير.",
+          text: "• Ibuprofen 400mg + Paracetamol 500mg : حبة من كل دواء معاً كل 8 ساعات بعد الطعام عند اللزوم."
+        }
+      ],
+
+      surgery_edema: [
+        {
+          name: "Dexamethasone 4mg / 8mg tab",
+          dose: "8 ملغ صباح أول يوم بعد القلع، ثم 4 ملغ اليوم الثاني، ثم 2 ملغ اليوم الثالث.",
+          note: "ستيروئيد قشري يمنع تشكل الوذمة والضزز (Trismus) وتورم الوجه بعد جراحة أضراس العقل المنطمرة. ⚠️ تجنبه مع السكري غير المضبوط.",
+          text: "• Dexamethasone 4mg tab : حبتان صباح اليوم الأول بعد الجراحة، حبة صباح اليوم الثاني، نصف حبة اليوم الثالث."
+        },
+        {
+          name: "Reparyl-Dragees / Alphintern tab",
+          dose: "حبتان 3 مرات يومياً قبل وجبات الطعام بساعة كاملة.",
+          note: "إنزيمات مضادة للوذمة والتورم والنزف الدموي تحت المخاطي. شرط الامتصاص الفعال هو تناولها على معدة فارغة تماماً.",
+          text: "• Reparyl-Dragees : حبتان 3 مرات يومياً قبل الطعام بساعة لمدة 5 أيام."
+        }
+      ],
+
+      tmj: [
+        {
+          name: "Diazepam 2mg / 5mg tab",
+          dose: "حبة واحدة قبل النوم لمدة 5 إلى 7 أيام فقط.",
+          note: "مرخٍ عضلي ومهدئ مركزي لحالات الكزاز العضلي الصباحي وعصر الأسنان الليلي الشديد (Severe Bruxism). يسبب النعاس.",
+          text: "• Diazepam 5mg tab : نصف حبة إلى حبة واحدة قبل النوم لمدة 5 أيام فقط للسيطرة على تشنج العضلات الماضغة."
+        },
+        {
+          name: "Muscadol / Myogesic (Paracetamol + Orphenadrine)",
+          dose: "حبة واحدة مرتين يومياً صباحاً ومساءً بعد الطعام.",
+          note: "مرخٍ عضلي محيطي مع مسكن نوعي لآلام العضلة الصدغية الماضغة والرقبة.",
+          text: "• Muscadol tab : حبة واحدة مرتين يومياً بعد الطعام لمدة 5 أيام."
+        }
+      ],
+
+      prophylaxis: [
+        {
+          name: "AHA Prophylaxis: Amoxicillin 2g (الجرعة المعيارية)",
+          dose: "2 غرام (4 كبسولات عيار 500 ملغ) تؤخذ جرعة واحدة قبل الإجراء السني بـ 30-60 دقيقة.",
+          note: "لوقاية مرضى الصمامات الاصطناعية، تشوهات القلب الولادية، وسوابق التهاب الشغاف الجرثومي (Infective Endocarditis).",
+          text: "• Amoxicillin 500mg : أخذ 4 كبسولات معاً (2 غرام) دفعة واحدة قبل موعد المعالجة بـ 45 دقيقة."
+        },
+        {
+          name: "AHA Prophylaxis: Clindamycin 600mg (لحساسية البنسلين)",
+          dose: "600 ملغ (كبسولتان عيار 300 ملغ) تؤخذ جرعة واحدة قبل الإجراء بـ 30-60 دقيقة.",
+          note: "الخيار الوقائي الأول للمرضى الذين يعانون من حساسية مفرطة للبنسلين.",
+          text: "• Clindamycin 300mg : أخذ كبسولتين معاً (600 ملغ) دفعة واحدة قبل الإجراء السني بـ 45 دقيقة."
+        },
+        {
+          name: "AHA Prophylaxis: Azithromycin 500mg",
+          dose: "500 ملغ قرص واحد يؤخذ قبل الإجراء بـ 30 إلى 60 دقيقة.",
+          note: "خيار بديل معتمد من جمعية القلب الأمريكية (AHA) لحساسية البنسلين.",
+          text: "• Azithromycin 500mg : قرص واحد يؤخذ قبل الإجراء السني بـ 45 دقيقة."
+        }
+      ],
+
+      dry_socket: [
+        {
+          name: "Alveogyl (تطبيق عيادي موضعي)",
+          dose: "يوضع مقدار صغير داخل السنخ الجاف بعد الغسيل اللطيف بسيروم ملحي دافئ.",
+          note: "ضماد مهدئ يحتوي على ألياف الكينغبو واليودوفورم واليوجينول، يسكن الألم فوراً دون الحاجة لمسكنات عنيفة.",
+          text: "• تطبيق موضعي لضماد Alveogyl المسكن داخل السنخ في العيادة دون خياطة."
+        },
+        {
+          name: "Tramadol 50mg + Paracetamol (عند الألم العصبي الشديد)",
+          dose: "قرص واحد كل 8 ساعات عند اللزوم تحت إشراف الطبيب.",
+          note: "لحالات السنخ الجاف المستعصية مع ألم ممتد للأذن والصدغ.",
+          text: "• Tramadol/Paracetamol 37.5/325mg : قرص واحد كل 8 ساعات عند شدة الألم فقط."
+        }
+      ],
+
+      aphthous_fungal: [
+        {
+          name: "Kenalog in Orabase (Triamcinolone Acetonide 0.1%)",
+          dose: "تطبيق كمية ضئيلة جداً بالضغط دون تدليك فوق القرحة القلاعية قبل النوم وبعد الوجبات.",
+          note: "معجون مخاطي يلتصق بالقرحة ويفرز كورتيزون موضعي ينهي الألم ويسرع الالتئام. ⚠️ ممنوع إذا كانت القرحة هربسية فيروسية.",
+          text: "• Kenalog in Orabase : وضع لمسة صغيرة على القرحة القلاعية قبل النوم مباشرة وبعد الطعام لمدة 4 أيام."
+        },
+        {
+          name: "Daktarin Oral Gel (Miconazole)",
+          dose: "نصف ملعقة صغيرة 4 مرات يومياً بعد الطعام، مع إبقاء الجل في الفم أطول فترة ممكنة ثم بلعه.",
+          note: "مضاد فطريات المبيضات البيض (Thrush) وداء المبيضات تحت البدلات السنية. ⚠️ يتداخل بشدة مع مميع الدم وارفارين.",
+          text: "• Daktarin Oral Gel : نصف ملعقة صغيرة تُمسح داخل الفم 4 مرات يومياً بعد الوجبات وتُبقى لدقيقتين ثم تُبلع لمدة أسبوع."
+        },
+        {
+          name: "Zovirax 5% Cream (Acyclovir)",
+          dose: "دهن موضعي على نفطات الهربس الشفوي 5 مرات يومياً في مرحلة التنميل الأولى (Prodromal).",
+          note: "يبدأ تطبيقه فور الشعور بالحرقة وقبل انفجار الحويصلات ليحد من دورة الفيروس.",
+          text: "• Acyclovir 5% Cream : تطبيق موضعي على شفة المريض 5 مرات يومياً لمدة 5 أيام."
+        }
+      ],
+
+      pregnancy: [
+        {
+          name: "Amoxicillin 500mg (FDA Category B)",
+          dose: "كبسولة واحدة كل 8 ساعات بعد الطعام لمدة 6 أيام.",
+          note: "المضاد الحيوي الأكثر أماناً وموثوقية عبر كل أشهر الحمل وأثناء الرضاعة الطبيعية.",
+          text: "• Amoxicillin 500mg : كبسولة واحدة كل 8 ساعات بعد الأكل لمدة 6 أيام (آمن للحوامل Category B)."
+        },
+        {
+          name: "Paracetamol 500mg - 1g (FDA Category B)",
+          dose: "حبة واحدة كل 6-8 ساعات عند الألم والحرارة.",
+          note: "المسكن الوحيد المعتمد كخط أول للحوامل. ⚠️ يمنع إعطاء مضادات الالتهاب مثل البروفين أو الفولتارين خاصة في الثلث الثالث من الحمل.",
+          text: "• Paracetamol 1g : حبة واحدة عند اللزوم كل 8 ساعات (المسكن الآمن أثناء الحمل)."
+        },
+        {
+          name: "Erythromycin 500mg (Base/Ethylsuccinate)",
+          dose: "حبة كل 6 ساعات بعد الطعام.",
+          note: "بديل آمن للبنسلين أثناء الحمل في حال الحساسية. (تجنب تماماً ملح Estolate لأنه يسبب سمية كبدية للحامل).",
+          text: "• Erythromycin 500mg : قرص كل 6 ساعات بعد الطعام (بديل آمن لتحسس البنسلين للحوامل)."
+        }
+      ],
+
+      supplements: [
+        {
+          name: "Vitamin C 1000mg Effervescent",
+          dose: "قرص فوار واحد في نصف كأس ماء يومياً بعد الإفطار لمدة 15 يوماً.",
+          note: "عنصر بنائي جوهري لتصنيع ألياف الكولاجين، يسرع التئام جروح القلع والجراحة والتهابات اللثة الدامية.",
+          text: "• Vitamin C 1000mg فوار : قرص واحد يومياً في كأس ماء بعد الإفطار لمدة 15 يوماً لتسريع ترميم الأنسجة."
+        },
+        {
+          name: "Neurobion (B1 + B6 + B12)",
+          dose: "حبة واحدة يومياً بعد وجبة الغداء لمدة شهر كامل.",
+          note: "مغذي ومجدد لغمد الميالين العصبي، مخصص لمشاكل رض العصب السنخي السفلي بعد قلع العقل واللسان الحارق (Burning Mouth).",
+          text: "• Neurobion tab : حبة واحدة يومياً بعد الغداء لمدة شهر كامل لترميم الألياف العصبية الحسية."
+        },
+        {
+          name: "Calcium 600mg + Vitamin D3 400IU",
+          dose: "قرص واحد يومياً مع وجبة الغداء.",
+          note: "لدعم الكثافة العظمية والاندماج العظمي حول الزرعات السنية (Osseointegration) ودعم مرضى التهاب النسج الداعمة المزمن.",
+          text: "• Calcium + Vitamin D3 : قرص واحد يومياً مع وجبة الغداء لدعم الكثافة العظمية حول الأسنان والزرعات."
+        }
+      ]
+    };
+
+    function switchIndication(key, tabBtn) {
+      document.querySelectorAll('.rx-ind-tab').forEach(b => b.classList.remove('active'));
+      tabBtn.classList.add('active');
+
+      const container = document.getElementById('indicationDrugsContainer');
+      container.innerHTML = '';
+      const list = clinicalDentalPharmacopeia[key] || [];
+
+      list.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'drug-card';
+        div.innerHTML = `
+          <div class="drug-title">
+            <span>💊 ${item.name}</span>
+            <span style="font-size:0.75rem; color:var(--primary); font-weight:normal;">+ إضافة للوصفة</span>
+          </div>
+          <div class="drug-dosage">⏱️ <b>الجرعة:</b> ${item.dose}</div>
+          <div class="drug-note">💡 <b>تنبيه سريري:</b> ${item.note}</div>
+        `;
+        div.onclick = () => addRxText(item.text);
+        container.appendChild(div);
+      });
+    }
+
+    // إدارة حاسبة الأطفال
+    function updatePediatricDoses(weightKg) {
+      const w = parseFloat(weightKg);
+      document.getElementById('pediatricWeightDisplay').innerText = `${w} كغ`;
+
+      const amoxMg = (w * 50) / 3;
+      const amoxMl = ((amoxMg / 250) * 5).toFixed(1);
+
+      const augMg = (w * 45) / 2;
+      const augMl = ((augMg / 457) * 5).toFixed(1);
+
+      const ibuMl = (((w * 10) / 100) * 5).toFixed(1);
+      const paraMl = (((w * 15) / 120) * 5).toFixed(1);
+      const azithroMl = (((w * 10) / 200) * 5).toFixed(1);
+
+      const container = document.getElementById('pediatricDoseChips');
+      container.innerHTML = `
+        <button class="chip-btn" onclick="addRxText('• Amoxicillin 250mg/5ml شراب : إعطاء ${amoxMl} مل كل 8 ساعات بعد الطعام لمدة 6 أيام (الوزن ${w} كغ).')">
+          أموكسيل 250 (${amoxMl} مل كل 8 س)
+        </button>
+        <button class="chip-btn" onclick="addRxText('• Augmentin 457mg/5ml شراب : إعطاء ${augMl} مل كل 12 ساعة بعد الطعام لمدة 6 أيام (الوزن ${w} كغ).')">
+          أوغمانتين 457 (${augMl} مل كل 12 س)
+        </button>
+        <button class="chip-btn" onclick="addRxText('• Ibuprofen 100mg/5ml شراب : إعطاء ${ibuMl} مل كل 8 ساعات بعد الأكل عند اللزوم (الوزن ${w} كغ).')">
+          بروفين شراب (${ibuMl} مل كل 8 س)
+        </button>
+        <button class="chip-btn" onclick="addRxText('• Paracetamol 120mg/5ml شراب : إعطاء ${paraMl} مل كل 6 ساعات عند اللزوم للألم والحرارة (الوزن ${w} كغ).')">
+          باراسيتامول (${paraMl} مل كل 6 س)
+        </button>
+        <button class="chip-btn" onclick="addRxText('• Azithromycin 200mg/5ml شراب : إعطاء ${azithroMl} مل مرة واحدة يومياً قبل الأكل بساعة لمدة 3 أيام فقط (الوزن ${w} كغ).')">
+          أزيترومايسين (${azithroMl} مل يومياً - 3 أيام)
+        </button>
+      `;
+    }
+
+    function openPrescriptionModal() {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p) return;
+      document.getElementById('rxTextarea').value = p.prescription || '';
+
+      let initialWeight = 20;
+      if (p.age) {
+        const ageNum = parseInt(p.age);
+        if (ageNum <= 1) initialWeight = 10;
+        else if (ageNum <= 3) initialWeight = 14;
+        else if (ageNum <= 6) initialWeight = 20;
+        else if (ageNum <= 10) initialWeight = 30;
+        else if (ageNum < 14) initialWeight = 40;
+      }
+      document.getElementById('pediatricWeightSlider').value = initialWeight;
+      updatePediatricDoses(initialWeight);
+
+      const firstTab = document.querySelector('.rx-ind-tab');
+      if (firstTab) switchIndication('abscess', firstTab);
+
+      document.getElementById('prescriptionModal').style.display = 'flex';
+    }
+
+    function addRxText(entry) {
+      const tx = document.getElementById('rxTextarea');
+      tx.value = tx.value ? tx.value + '\n' + entry : entry;
+    }
+
+    function printPrescription() {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p) return;
+
+      const content = document.getElementById('rxTextarea').value.trim();
+      if (!content) return alert('الرجاء اختيار أو كتابة الأدوية أولاً');
+
+      p.prescription = content;
+      syncSave();
+
+      document.getElementById('printRxPatientName').innerText = p.name;
+      document.getElementById('printRxDate').innerText = new Date().toLocaleDateString('ar-SY');
+      document.getElementById('printRxContent').innerText = content;
+
+      document.getElementById('printablePrescriptionArea').style.display = 'block';
+      window.print();
+      document.getElementById('printablePrescriptionArea').style.display = 'none';
+    }
+
+    // إدارة المالية العامة
     function openFinancialDashboard() {
       const totals = { USD: { cost: 0, paid: 0 }, TRY: { cost: 0, paid: 0 }, SYP: { cost: 0, paid: 0 } };
 
@@ -1197,12 +1789,42 @@
       document.getElementById('financeModal').style.display = 'flex';
     }
 
+    // إدارة المريض
     function openPatientModal() {
       document.getElementById('pName').value = '';
       document.getElementById('pPhone').value = '';
       document.getElementById('pAge').value = '';
       document.getElementById('pMedical').value = '';
+      setSelectedChipVal('pGenderGroup', 'ذكر');
       document.getElementById('patientModal').style.display = 'flex';
+    }
+
+    function openEditPatientModal() {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p) return;
+      document.getElementById('editPName').value = p.name || '';
+      document.getElementById('editPPhone').value = p.phone || '';
+      document.getElementById('editPAge').value = p.age || '';
+      setSelectedChipVal('editPGenderGroup', p.gender || 'ذكر');
+      document.getElementById('editPMedical').value = p.medical || '';
+      document.getElementById('editPatientModal').style.display = 'flex';
+    }
+
+    function saveEditedPatient() {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p) return;
+      const newName = document.getElementById('editPName').value.trim();
+      if (!newName) return alert('يرجى كتابة الاسم');
+
+      p.name = newName;
+      p.phone = document.getElementById('editPPhone').value.trim();
+      p.age = document.getElementById('editPAge').value;
+      p.gender = getSelectedChipVal('editPGenderGroup') || 'ذكر';
+      p.medical = document.getElementById('editPMedical').value.trim();
+
+      syncSave();
+      closeModals();
+      selectPatient(p.id);
     }
 
     function savePatient() {
@@ -1214,9 +1836,10 @@
         name: name,
         phone: document.getElementById('pPhone').value.trim(),
         age: document.getElementById('pAge').value,
-        gender: document.getElementById('pGender').value,
+        gender: getSelectedChipVal('pGenderGroup') || 'ذكر',
         medical: document.getElementById('pMedical').value.trim(),
         quickNotes: '',
+        prescription: '',
         teeth: {},
         clinicalSessions: [],
         payments: [],
@@ -1230,7 +1853,7 @@
       selectPatient(newPatient.id);
     }
 
-    function deleteCurrentPatient() {
+        function deleteCurrentPatient() {
       if (!confirm('حذف ملف المريض بالكامل مع كافة سجلاته وأشعته؟')) return;
       patients = patients.filter(p => p.id !== currentPatientId);
       syncSave();
