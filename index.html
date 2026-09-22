@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عيادة اللؤلؤ السنية - النظام الإكلينيكي والصيدلاني الشامل</title>
+  <title>عيادة اللؤلؤ السنية - النظام الإكلينيكي المتكامل</title>
   
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -22,6 +22,7 @@
       --warning: #f59e0b;
       --success: #10b981;
       --whatsapp: #25d366;
+      --accent: #8b5cf6;
     }
 
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
@@ -43,7 +44,7 @@
     .btn-secondary { background: #e2e8f0; color: #334155; }
     .btn-secondary:hover { background: #cbd5e1; }
     .btn-danger { background: var(--danger); color: white; }
-    .btn-accent { background: #8b5cf6; color: white; }
+    .btn-accent { background: var(--accent); color: white; }
     .btn-wa { background: var(--whatsapp); color: white; }
     .btn-sm { padding: 4px 8px; font-size: 0.78rem; }
 
@@ -62,12 +63,11 @@
       border-radius: 12px; padding: 14px; margin-bottom: 14px;
     }
 
-    input, textarea {
+    input, textarea, select {
       width: 100%; padding: 8px 10px; margin-top: 4px; margin-bottom: 10px;
       border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;
     }
 
-    /* أزرار الاختيار السريع (Chips) */
     .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 12px 0; }
     .chip-btn {
       background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 8px;
@@ -91,7 +91,6 @@
     .chip-btn[data-val="crown"].active       { background: #16a34a; border-color: #16a34a; }
     .chip-btn[data-val="missing"].active     { background: #64748b; border-color: #64748b; text-decoration: line-through; }
 
-    /* عداد أطوال الأقنية */
     .canal-stepper-card {
       background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px;
       padding: 10px; margin-bottom: 8px;
@@ -111,7 +110,6 @@
     }
     .slider-wheel { width: 100%; accent-color: #d97706; cursor: pointer; margin-top: 6px; }
 
-    /* قائمة المرضى */
     .patient-list { max-height: 600px; overflow-y: auto; }
     .patient-item {
       padding: 10px; border-radius: 8px; border: 1px solid var(--border);
@@ -132,47 +130,33 @@
       color: #713f12; font-size: 0.88rem;
     }
 
-    /* مخطط الأسنان 3D */
+    /* Dental Chart View */
     .dental-chart-container {
-      overflow-x: auto; padding: 10px 0; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);
+      overflow-x: auto; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);
+      direction: ltr; /* لضمان ثبات الترتيب الطبي التشريحي يسار/يمين بدقة */
     }
-    .arch-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); text-align: center; margin-bottom: 4px; }
-    .arch-row { display: flex; justify-content: center; gap: 6px; min-width: 780px; padding: 4px; }
+    .arch-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); text-align: center; margin-bottom: 6px; direction: rtl; }
+    .arch-row { display: flex; justify-content: center; gap: 4px; min-width: 760px; }
+    .arch-quadrant { display: flex; gap: 4px; }
+    .arch-separator { width: 2px; background: #cbd5e1; margin: 0 6px; border-radius: 2px; }
     
     .tooth-card {
       display: flex; flex-direction: column; align-items: center; width: 44px;
       cursor: pointer; transition: 0.15s; user-select: none;
     }
     .tooth-card:hover { transform: translateY(-3px) scale(1.05); }
-    .tooth-num { font-size: 0.75rem; font-weight: bold; margin-bottom: 2px; }
+    .tooth-num { font-size: 0.75rem; font-weight: bold; margin-bottom: 2px; color: #334155; }
 
     .tooth-svg-box {
-      width: 42px; height: 56px; position: relative; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+      width: 40px; height: 68px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
     }
-    .root-path { fill: #f1f5f9; stroke: #64748b; stroke-width: 1.2; stroke-linejoin: round; }
-    .surface-poly { fill: #ffffff; stroke: #94a3b8; stroke-width: 1; transition: fill 0.2s; }
-    .surface-poly:hover { fill: #bae6fd; }
-
-    .cond-sound .root-path { fill: #f8fafc; }
-    .cond-caries .surface-poly { fill: #fca5a5; }
-    .cond-caries .root-path { fill: #fee2e2; }
-    .cond-filling .surface-poly { fill: #c7d2fe; }
-    .cond-fracture .surface-poly { fill: #fed7aa; }
-    .cond-restoration .surface-poly { fill: #e9d5ff; }
-    .cond-aesthetic .surface-poly { fill: #99f6e4; }
-    .cond-endo .root-path { fill: #fde047; stroke: #b45309; stroke-width: 1.8; }
-    .cond-reendo .root-path { fill: #f472b6; stroke: #9d174d; stroke-width: 1.8; }
-    .cond-crown .surface-poly { fill: #86efac; stroke: #15803d; }
-    .cond-crown .root-path { fill: #bbf7d0; }
-    .cond-missing { opacity: 0.25; filter: grayscale(1); }
 
     .tooth-status-pill {
       font-size: 0.62rem; font-weight: bold; padding: 1px 4px; border-radius: 4px;
       margin-top: 2px; text-align: center; white-space: nowrap; max-width: 44px;
-      overflow: hidden; text-overflow: ellipsis; background: #e2e8f0;
+      overflow: hidden; text-overflow: ellipsis; background: #e2e8f0; direction: rtl;
     }
 
-    /* الأشعة */
     .xray-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
     .xray-thumb {
       width: 95px; height: 95px; object-fit: cover; border-radius: 8px;
@@ -186,7 +170,6 @@
       font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
 
-    /* الجداول */
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; }
     th, td { border: 1px solid var(--border); padding: 8px; text-align: right; }
     th { background: #f1f5f9; }
@@ -195,7 +178,6 @@
     .badge-in { color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
     .badge-out { color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
 
-    /* النوافذ المنبثقة */
     .modal {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
       align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 10px;
@@ -214,7 +196,6 @@
     .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
     .patient-balance-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; margin-left: 6px; font-weight: bold; }
 
-    /* الصيدلية السريرية */
     .rx-indication-bar {
       display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px;
       border-bottom: 2px solid #e2e8f0;
@@ -254,6 +235,55 @@
 </head>
 <body>
 
+  <!-- تعاريف تظليل الأسنان ثلاثية الأبعاد -->
+  <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1">
+    <defs>
+      <linearGradient id="toothEnamelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="35%" stop-color="#fdfbf7"/>
+        <stop offset="70%" stop-color="#f3ede2"/>
+        <stop offset="100%" stop-color="#e2d7c5"/>
+      </linearGradient>
+      <linearGradient id="toothRootGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fef8ee"/>
+        <stop offset="50%" stop-color="#eddcc6"/>
+        <stop offset="100%" stop-color="#d4bca2"/>
+      </linearGradient>
+      <radialGradient id="cariesGrad" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="#450a0a"/>
+        <stop offset="45%" stop-color="#991b1b"/>
+        <stop offset="85%" stop-color="#dc2626"/>
+        <stop offset="100%" stop-color="#f87171"/>
+      </radialGradient>
+      <linearGradient id="fillingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#e0e7ff"/>
+        <stop offset="40%" stop-color="#818cf8"/>
+        <stop offset="100%" stop-color="#4338ca"/>
+      </linearGradient>
+      <linearGradient id="crownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fef08a"/>
+        <stop offset="30%" stop-color="#facc15"/>
+        <stop offset="70%" stop-color="#ca8a04"/>
+        <stop offset="100%" stop-color="#854d0e"/>
+      </linearGradient>
+      <linearGradient id="veneerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ccfbf1"/>
+        <stop offset="40%" stop-color="#2dd4bf"/>
+        <stop offset="100%" stop-color="#0f766e"/>
+      </linearGradient>
+      <linearGradient id="endoPulpGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#ea580c"/>
+        <stop offset="50%" stop-color="#f97316"/>
+        <stop offset="100%" stop-color="#c2410c"/>
+      </linearGradient>
+      <linearGradient id="glassGloss" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+        <stop offset="50%" stop-color="#ffffff" stop-opacity="0.1"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
   <header>
     <div>
       <h1>عيادة اللؤلؤ السنية</h1>
@@ -272,7 +302,6 @@
   </header>
 
   <div class="container">
-    <!-- قائمة المرضى -->
     <div>
       <div class="card">
         <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="openPatientModal()">+ إضافة مريض جديد</button>
@@ -281,7 +310,6 @@
       </div>
     </div>
 
-    <!-- التفاصيل السريرية للمريض -->
     <div id="patientDetailsSection" style="display: none;">
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 8px;">
@@ -308,7 +336,6 @@
         </div>
       </div>
 
-      <!-- المواعيد -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <h3 style="margin: 0;">مواعيد المريض (محددة بالساعة)</h3>
@@ -328,22 +355,29 @@
         </table>
       </div>
 
-      <!-- مخطط الأسنان التشريحي 3D بالوجوه السريرية -->
+      <!-- المخطط السريري FDI الموزع تشريحياً بالاتجاه الطبي المعتمد -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <h3 style="margin: 0;">مخطط الأسنان التشريحي (3D Anatomical FDI Chart)</h3>
-          <span style="font-size: 0.75rem; color: var(--text-muted);">اضغط على أي سن لاختيار حالته وضبط أطوال الأقنية بالبكرة التفاعلية</span>
+          <h3 style="margin: 0;">مخطط الأسنان التشريحي (FDI Dental Chart)</h3>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">يمين المريض (يسار الشاشة) ⟵ ⟶ يسار المريض (يمين الشاشة)</span>
         </div>
         <div class="dental-chart-container">
           <div class="arch-title">الفك العلوي (Maxilla)</div>
-          <div class="arch-row" id="upperArch"></div>
-          <hr style="border: 0; border-top: 1px dashed var(--border); margin: 8px 0;">
+          <div class="arch-row">
+            <div class="arch-quadrant" id="upperRightArch"></div>
+            <div class="arch-separator"></div>
+            <div class="arch-quadrant" id="upperLeftArch"></div>
+          </div>
+          <hr style="border: 0; border-top: 1px dashed var(--border); margin: 10px 0;">
           <div class="arch-title">الفك السفلي (Mandible)</div>
-          <div class="arch-row" id="lowerArch"></div>
+          <div class="arch-row">
+            <div class="arch-quadrant" id="lowerRightArch"></div>
+            <div class="arch-separator"></div>
+            <div class="arch-quadrant" id="lowerLeftArch"></div>
+          </div>
         </div>
       </div>
 
-      <!-- صور الأشعة -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
@@ -358,7 +392,6 @@
         <div class="xray-grid" id="xrayGridContainer"></div>
       </div>
 
-      <!-- السجل السريري المنفصل -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <h3 style="margin: 0; color: var(--primary);">📝 سجل الجلسات والإجراءات السريرية</h3>
@@ -377,7 +410,6 @@
         </table>
       </div>
 
-      <!-- المعاملات والمدفوعات المالية المنفصلة -->
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
           <div>
@@ -402,6 +434,7 @@
       </div>
     </div>
   </div>
+
   <!-- Modal: المخطط الكامل للمواعيد -->
   <div class="modal" id="scheduleModal">
     <div class="modal-content">
@@ -521,7 +554,7 @@
     </div>
   </div>
 
-  <!-- Modal: حركة مالية -->
+  <!-- Modal: حركة مالية بالعملات الثلاث -->
   <div class="modal" id="paymentModal">
     <div class="modal-content">
       <h3 style="margin-top: 0; color: #059669;">تسجيل حركة مالية جديدة</h3>
@@ -533,7 +566,7 @@
         <div class="chip-btn" data-val="payment" onclick="selectChip('payTypeGroup', this)">تسديد دفعة مقبوضة (واصل)</div>
       </div>
 
-      <label>العملة:</label>
+      <label>العملة المعتمدة:</label>
       <div class="chip-group" id="payCurrencyGroup">
         <div class="chip-btn active" data-val="USD" onclick="selectChip('payCurrencyGroup', this)">دولار أمريكي ($)</div>
         <div class="chip-btn" data-val="TRY" onclick="selectChip('payCurrencyGroup', this)">ليرة تركية (₺)</div>
@@ -549,12 +582,12 @@
     </div>
   </div>
 
-  <!-- Modal: تعديل السن واللبية -->
+  <!-- Modal: السن وقوائم الحالات وأطوال الأقنية اللبية -->
   <div class="modal" id="toothModal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 600px;">
       <h3 id="modalToothTitle" style="margin-top: 0;"></h3>
       
-      <label>الحالة السريرية للسن (اختر مباشرة بنقرة واحدة):</label>
+      <label>الحالة السريرية للسن (اختر الحالة):</label>
       <div class="chip-group" id="toothStatusChips">
         <div class="chip-btn" data-val="sound" onclick="setToothStatusChip('sound')">سليم (Sound)</div>
         <div class="chip-btn" data-val="caries" onclick="setToothStatusChip('caries')">نخر (Caries)</div>
@@ -596,7 +629,6 @@
         <button class="btn btn-secondary btn-sm" onclick="closeModals()">✕ إغلاق</button>
       </div>
 
-      <!-- حاسبة الأطفال حسب الوزن -->
       <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px; margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <strong style="color:#1d4ed8; font-size:0.88rem;">👶 حاسبة جرعات الأطفال حسب الوزن:</strong>
@@ -606,7 +638,6 @@
         <div class="chip-group" id="pediatricDoseChips" style="margin-bottom:0; margin-top:6px;"></div>
       </div>
 
-      <!-- تبويبات المشاكل السريرية -->
       <div class="rx-indication-bar" id="indicationTabsContainer">
         <button class="rx-ind-tab active" onclick="switchIndication('abscess', this)">🔴 خراجات وإنتانات ذروية</button>
         <button class="rx-ind-tab" onclick="switchIndication('perio', this)">🟠 لثة ونسج داعمة (ANUG)</button>
@@ -621,10 +652,8 @@
         <button class="rx-ind-tab" onclick="switchIndication('supplements', this)">✨ فيتامينات وترميم لثة وأعصاب</button>
       </div>
 
-      <!-- قائمة أدوية المشكلة السريرية المحددة مع الملاحظات السريرية -->
       <div id="indicationDrugsContainer" style="max-height: 240px; overflow-y: auto; margin-bottom: 12px; padding: 2px;"></div>
 
-      <!-- مسودة نص الوصفة الطبية التفاعلية -->
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <label style="font-weight:bold; color:var(--primary); font-size:0.9rem;">📝 مسودة الوصفة الطبية الحالية (انقر على أي دواء لإضافته فوراً):</label>
         <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rxTextarea').value = ''">مسح النص</button>
@@ -638,7 +667,6 @@
     </div>
   </div>
 
-  <!-- Modal: تذكيرات الغد -->
   <div class="modal" id="remindersModal">
     <div class="modal-content">
       <h3 style="margin-top: 0; color: var(--whatsapp);">💬 تذكيرات مواعيد الغد</h3>
@@ -650,7 +678,6 @@
     </div>
   </div>
 
-  <!-- Modal: التقارير المالية -->
   <div class="modal" id="financeModal">
     <div class="modal-content">
       <h3 style="margin-top: 0; color: var(--primary);">📊 التقارير المالية للعيادة</h3>
@@ -661,14 +688,12 @@
     </div>
   </div>
 
-  <!-- Modal: تكبير الأشعة -->
   <div class="modal" id="imagePreviewModal" onclick="this.style.display='none'">
     <div style="max-width: 90%; max-height: 90%;">
       <img id="previewImageTag" src="" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
     </div>
   </div>
 
-  <!-- منطقة الطباعة الخاصة بالوصفة -->
   <div id="printablePrescriptionArea" style="display:none; padding: 25px; font-family: system-ui, sans-serif; direction: rtl;">
     <div style="text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 20px;">
       <h2 style="margin: 0; color: #0284c7;">عيادة اللؤلؤ السنية</h2>
@@ -684,9 +709,10 @@
       <div style="height: 50px;"></div>
     </div>
   </div>
-    <script>
+
+  <script>
     // ==========================================
-    // ⚙️ إعدادات Firebase
+    // ⚙️ إعدادات Firebase والمزامنة السحابية
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyBko85Ru-pe_4jtEcqFDGuR1fKp9WBRPmE",
@@ -728,7 +754,7 @@
       });
     } catch (e) {
       console.warn("Firebase fallback:", e);
-      patients = JSON.parse(localStorage.getItem('dental_clinic_data_v12') || '[]');
+      patients = JSON.parse(localStorage.getItem('dental_clinic_data_master') || '[]');
       updateSyncIndicator(false);
     }
 
@@ -747,13 +773,12 @@
     }
 
     function syncSave() {
-      localStorage.setItem('dental_clinic_data_v12', JSON.stringify(patients));
+      localStorage.setItem('dental_clinic_data_master', JSON.stringify(patients));
       if (dbRef) {
         dbRef.set(patients).catch(err => console.error("Cloud write error:", err));
       }
     }
 
-    // أدوات اختيار الرقائق
     function selectChip(groupId, element) {
       const container = document.getElementById(groupId);
       container.querySelectorAll('.chip-btn').forEach(btn => btn.classList.remove('active'));
@@ -774,9 +799,16 @@
       });
     }
 
-    // ترقيم FDI
-    const upperTeethFDI = [18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28];
-    const lowerTeethFDI = [48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38];
+    // =========================================================================
+    // 🦷 التوزيع التشريحي الدقيق لترقيم الأسنان FDI (الاتجاه السريري الطبي الصحيح)
+    // يسار الشاشة = يمين المريض (Quadrant 1 & 4)
+    // يمين الشاشة = يسار المريض (Quadrant 2 & 3)
+    // =========================================================================
+    const upperRightFDI = [18, 17, 16, 15, 14, 13, 12, 11]; // يمين المريض علوي
+    const upperLeftFDI  = [21, 22, 23, 24, 25, 26, 27, 28]; // يسار المريض علوي
+
+    const lowerRightFDI = [48, 47, 46, 45, 44, 43, 42, 41]; // يمين المريض سفلي
+    const lowerLeftFDI  = [31, 32, 33, 34, 35, 36, 37, 38]; // يسار المريض سفلي
 
     const statusLabels = {
       sound: "سليم", caries: "نخر", filling: "حشوة", fracture: "كسر",
@@ -838,37 +870,139 @@
       window.notesSaveTimer = setTimeout(() => { ind.style.display = 'none'; }, 1500);
     }
 
-    // مخطط الأسنان التشريحي 3D
-    function renderDentalChart(patient) {
-      const upper = document.getElementById('upperArch');
-      const lower = document.getElementById('lowerArch');
-      upper.innerHTML = ''; lower.innerHTML = '';
+    // ==========================================
+    // 🎨 محرك رسم الأسنان ثلاثية الأبعاد الواقعي
+    // ==========================================
+    function generateToothSVG(num, status, isUpper) {
+      const lastDigit = num % 10;
+      let toothType = 'molar';
+      if (lastDigit === 1 || lastDigit === 2) toothType = 'incisor';
+      else if (lastDigit === 3) toothType = 'canine';
+      else if (lastDigit === 4 || lastDigit === 5) toothType = 'premolar';
+      else toothType = 'molar';
 
-      upperTeethFDI.forEach(num => upper.appendChild(createAnatomicalTooth(num, patient, true)));
-      lowerTeethFDI.forEach(num => lower.appendChild(createAnatomicalTooth(num, patient, false)));
+      const isMissing = (status === 'missing');
+      const opacity = isMissing ? '0.22' : '1';
+
+      let crownFill = "url(#toothEnamelGrad)";
+      let crownStroke = "#cbd5e1";
+      if (status === 'caries') { crownFill = "url(#cariesGrad)"; crownStroke = "#7f1d1d"; }
+      else if (status === 'filling') { crownFill = "url(#fillingGrad)"; crownStroke = "#3730a3"; }
+      else if (status === 'crown') { crownFill = "url(#crownGrad)"; crownStroke = "#854d0e"; }
+      else if (status === 'aesthetic') { crownFill = "url(#veneerGrad)"; crownStroke = "#0f766e"; }
+      else if (status === 'fracture') { crownFill = "url(#toothEnamelGrad)"; crownStroke = "#c2410c"; }
+      else if (status === 'restoration') { crownFill = "url(#fillingGrad)"; crownStroke = "#6b21a8"; }
+
+      let rootFill = "url(#toothRootGrad)";
+      let rootStroke = "#bcaaa4";
+
+      let endoCanalGraphic = '';
+      if (status === 'endo' || status === 'reendo') {
+        endoCanalGraphic = isUpper 
+          ? `<path d="M20 5 C20 5, 20 28, 20 40" stroke="url(#endoPulpGrad)" stroke-width="3" stroke-linecap="round"/>`
+          : `<path d="M20 59 C20 59, 20 36, 20 24" stroke="url(#endoPulpGrad)" stroke-width="3" stroke-linecap="round"/>`;
+      }
+
+      let anatomyPaths = '';
+
+      if (isUpper) {
+        if (toothType === 'incisor') {
+          anatomyPaths = `
+            <path d="M14 34 C13 18, 18 3, 20 3 C22 3, 27 18, 26 34 C24 35, 16 35, 14 34 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M10 34 C9 46, 12 65, 20 65 C28 65, 31 46, 30 34 C25 36, 15 36, 10 34 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M13 36 C13 46, 15 60, 18 60 C17 50, 15 38, 13 36 Z" fill="url(#glassGloss)"/>
+          `;
+        } else if (toothType === 'canine') {
+          anatomyPaths = `
+            <path d="M13 34 C12 14, 19 1, 20 1 C21 1, 28 14, 27 34 C24 35, 16 35, 13 34 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M9 34 C8 44, 20 68, 20 68 C20 68, 32 44, 31 34 C26 36, 14 36, 9 34 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M12 36 C12 44, 18 60, 19 60 C17 50, 14 40, 12 36 Z" fill="url(#glassGloss)"/>
+          `;
+        } else if (toothType === 'premolar') {
+          anatomyPaths = `
+            <path d="M13 32 C12 16, 16 4, 17 4 C18 4, 21 16, 20 32 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M19 32 C19 16, 23 4, 24 4 C25 4, 28 16, 27 32 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M8 32 C7 44, 11 64, 20 64 C29 64, 33 44, 32 32 C26 34, 14 34, 8 32 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M11 34 C11 44, 14 58, 17 58 C15 50, 13 40, 11 34 Z" fill="url(#glassGloss)"/>
+          `;
+        } else {
+          anatomyPaths = `
+            <path d="M9 30 C8 16, 12 4, 13 4 C14 4, 17 16, 16 30 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M18 30 C18 12, 20 2, 20 2 C21 2, 23 12, 22 30 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M23 30 C22 16, 26 4, 27 4 C28 4, 31 16, 30 30 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M5 30 C4 44, 8 66, 20 66 C32 66, 36 44, 35 30 C28 33, 12 33, 5 30 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M14 42 C18 46, 22 46, 26 42" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" fill="none"/>
+            <path d="M8 33 C8 44, 12 60, 16 60 C14 50, 10 40, 8 33 Z" fill="url(#glassGloss)"/>
+          `;
+        }
+      } else {
+        if (toothType === 'incisor') {
+          anatomyPaths = `
+            <path d="M14 36 C13 52, 18 67, 20 67 C22 67, 27 52, 26 36 C24 35, 16 35, 14 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M10 36 C9 24, 12 5, 20 5 C28 5, 31 24, 30 36 C25 34, 15 34, 10 36 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M13 34 C13 24, 15 10, 18 10 C17 20, 15 30, 13 34 Z" fill="url(#glassGloss)"/>
+          `;
+        } else if (toothType === 'canine') {
+          anatomyPaths = `
+            <path d="M13 36 C12 56, 19 69, 20 69 C21 69, 28 56, 27 36 C24 35, 16 35, 13 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M9 36 C8 26, 20 2, 20 2 C20 2, 32 26, 31 36 C26 34, 14 34, 9 36 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M12 34 C12 26, 18 10, 19 10 C17 20, 14 30, 12 34 Z" fill="url(#glassGloss)"/>
+          `;
+        } else if (toothType === 'premolar') {
+          anatomyPaths = `
+            <path d="M13 36 C12 54, 18 67, 20 67 C22 67, 28 54, 27 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M8 36 C7 24, 11 6, 20 6 C29 6, 33 24, 32 36 C26 34, 14 34, 8 36 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M11 34 C11 24, 14 12, 17 12 C15 20, 13 30, 11 34 Z" fill="url(#glassGloss)"/>
+          `;
+        } else {
+          anatomyPaths = `
+            <path d="M9 36 C8 52, 13 67, 15 67 C16 67, 19 54, 18 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M21 36 C20 54, 24 67, 26 67 C27 67, 31 52, 30 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M5 36 C4 22, 8 4, 20 4 C32 4, 36 22, 35 36 C28 34, 12 34, 5 36 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M14 26 C18 22, 22 22, 26 26" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" fill="none"/>
+            <path d="M8 34 C8 24, 12 10, 16 10 C14 20, 10 30, 8 34 Z" fill="url(#glassGloss)"/>
+          `;
+        }
+      }
+
+      const fractureLine = (status === 'fracture') 
+        ? `<path d="M10 40 L18 46 L24 40 L30 48" stroke="#ea580c" stroke-width="2.5" fill="none"/>` 
+        : '';
+
+      const missingCross = isMissing 
+        ? `<line x1="4" y1="4" x2="36" y2="66" stroke="#94a3b8" stroke-dasharray="3,3" stroke-width="2"/><line x1="36" y1="4" x2="4" y2="66" stroke="#94a3b8" stroke-dasharray="3,3" stroke-width="2"/>` 
+        : '';
+
+      return `
+        <svg viewBox="0 0 40 70" opacity="${opacity}" style="width:100%; height:100%;">
+          ${anatomyPaths}
+          ${endoCanalGraphic}
+          ${fractureLine}
+          ${missingCross}
+        </svg>
+      `;
+    }
+
+    function renderDentalChart(patient) {
+      const ur = document.getElementById('upperRightArch');
+      const ul = document.getElementById('upperLeftArch');
+      const lr = document.getElementById('lowerRightArch');
+      const ll = document.getElementById('lowerLeftArch');
+
+      ur.innerHTML = ''; ul.innerHTML = ''; lr.innerHTML = ''; ll.innerHTML = '';
+
+      upperRightFDI.forEach(num => ur.appendChild(createAnatomicalTooth(num, patient, true)));
+      upperLeftFDI.forEach(num => ul.appendChild(createAnatomicalTooth(num, patient, true)));
+
+      lowerRightFDI.forEach(num => lr.appendChild(createAnatomicalTooth(num, patient, false)));
+      lowerLeftFDI.forEach(num => ll.appendChild(createAnatomicalTooth(num, patient, false)));
     }
 
     function createAnatomicalTooth(num, patient, isUpper) {
       const data = (patient.teeth && patient.teeth[num]) || { status: 'sound' };
       const card = document.createElement('div');
-      card.className = `tooth-card cond-${data.status}`;
-
-      let rootPath = isUpper 
-        ? `<path class="root-path" d="M 12 25 C 10 10, 16 2, 21 2 C 26 2, 32 10, 30 25 Z" />`
-        : `<path class="root-path" d="M 12 31 C 10 46, 16 54, 21 54 C 26 54, 32 46, 30 31 Z" />`;
+      card.className = 'tooth-card';
       
-      let crownY = isUpper ? 25 : 5;
-
-      let crownSvg = `
-        <g transform="translate(0, ${crownY})">
-          <polygon class="surface-poly" points="6,4 36,4 30,10 12,10" />
-          <polygon class="surface-poly" points="12,22 30,22 36,28 6,28" />
-          <polygon class="surface-poly" points="6,4 12,10 12,22 6,28" />
-          <polygon class="surface-poly" points="36,4 30,10 30,22 36,28" />
-          <rect class="surface-poly" x="12" y="10" width="18" height="12" rx="2" />
-        </g>
-      `;
-
       let badge = statusLabels[data.status] || 'سليم';
       if ((data.status === 'endo' || data.status === 'reendo') && data.canals && Object.values(data.canals).some(v => v)) {
         badge = '⚡ لبية';
@@ -877,10 +1011,7 @@
       card.innerHTML = `
         <span class="tooth-num">${num}</span>
         <div class="tooth-svg-box">
-          <svg viewBox="0 0 42 56" width="42" height="56">
-            ${rootPath}
-            ${crownSvg}
-          </svg>
+          ${generateToothSVG(num, data.status, isUpper)}
         </div>
         <span class="tooth-status-pill">${badge}</span>
       `;
@@ -889,7 +1020,9 @@
       return card;
     }
 
-    // نافذة السن والعدادات
+    // ==========================================
+    // ⚙️ نافذة السن وإجراءات المعالجة اللبية
+    // ==========================================
     const defaultCanalsByTooth = {
       molar_upper: ['MB', 'DB', 'Palatal', 'MB2'],
       molar_lower: ['MB', 'ML', 'Distal', 'D2'],
@@ -989,7 +1122,9 @@
       renderDentalChart(patient);
     }
 
-    // ضغط الأشعة
+    // ==========================================
+    // 📸 إدارة الأشعة مع الضغط التلقائي السريع
+    // ==========================================
     function compressXrayImage(file, maxWidth = 1200, quality = 0.8) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1069,7 +1204,9 @@
       document.getElementById('imagePreviewModal').style.display = 'flex';
     }
 
-    // 1. السجل السريري المنفصل
+    // ==========================================
+    // 📝 السجل السريري المنفصل
+    // ==========================================
     function renderClinicalSessions(patient) {
       const tbody = document.getElementById('clinicalSessionsTableBody');
       tbody.innerHTML = '';
@@ -1127,7 +1264,9 @@
       renderClinicalSessions(patient);
     }
 
-    // 2. دفتر السندات والمدفوعات المنفصلة
+    // =======================================================
+    // 💰 دفتر السندات والمدفوعات بالعملات الثلاث (USD, TRY, SYP)
+    // =======================================================
     function renderPayments(patient) {
       const tbody = document.getElementById('paymentsTableBody');
       tbody.innerHTML = '';
@@ -1196,7 +1335,7 @@
         type: getSelectedChipVal('payTypeGroup') || 'cost',
         currency: getSelectedChipVal('payCurrencyGroup') || 'USD',
         amount: amt,
-                note: document.getElementById('payNote').value.trim()
+        note: document.getElementById('payNote').value.trim()
       });
 
       syncSave();
@@ -1213,7 +1352,9 @@
       renderPayments(patient);
     }
 
-    // المواعيد المحددة بالساعة
+    // ==========================================
+    // 📅 المواعيد بالساعة والربط والتقويم
+    // ==========================================
     function renderAppointments(patient) {
       const tbody = document.getElementById('appointmentsTableBody');
       tbody.innerHTML = '';
@@ -1287,7 +1428,6 @@
       renderAppointments(patient);
     }
 
-    // جدول الرزنامة الشاملة للعيادة
     function openClinicScheduleModal() {
       document.getElementById('scheduleModal').style.display = 'flex';
       renderClinicSchedule();
@@ -1508,7 +1648,7 @@
           text: "• Paracetamol 1g tab : قرص واحد كل 6 إلى 8 ساعات عند اللزوم."
         },
         {
-          name: "Ibuprofen 400mg + Paracetamol 500mg (مشاركة تآزرية مذهلة)",
+          name: "Ibuprofen 400mg + Paracetamol 500mg (مشاركة تآزرية)",
           dose: "يؤخذان معاً كل 8 ساعات بعد الطعام عند الآلام المستعصية.",
           note: "أثبتت الدراسات السريرية أن مشاركة البروفين مع السيتامول تفوق التسكين بالمركبات الأفيونية مع آثار جانبية أقل بكثير.",
           text: "• Ibuprofen 400mg + Paracetamol 500mg : حبة من كل دواء معاً كل 8 ساعات بعد الطعام عند اللزوم."
@@ -1669,7 +1809,6 @@
       });
     }
 
-    // إدارة حاسبة الأطفال
     function updatePediatricDoses(weightKg) {
       const w = parseFloat(weightKg);
       document.getElementById('pediatricWeightDisplay').innerText = `${w} كغ`;
@@ -1751,7 +1890,9 @@
       document.getElementById('printablePrescriptionArea').style.display = 'none';
     }
 
-    // إدارة المالية العامة
+    // ==========================================
+    // 📊 إدارة الحسابات المالية العامة
+    // ==========================================
     function openFinancialDashboard() {
       const totals = { USD: { cost: 0, paid: 0 }, TRY: { cost: 0, paid: 0 }, SYP: { cost: 0, paid: 0 } };
 
@@ -1789,7 +1930,9 @@
       document.getElementById('financeModal').style.display = 'flex';
     }
 
-    // إدارة المريض
+    // ==========================================
+    // 👥 إدارة بيانات المريض والملفات
+    // ==========================================
     function openPatientModal() {
       document.getElementById('pName').value = '';
       document.getElementById('pPhone').value = '';
@@ -1853,7 +1996,7 @@
       selectPatient(newPatient.id);
     }
 
-        function deleteCurrentPatient() {
+    function deleteCurrentPatient() {
       if (!confirm('حذف ملف المريض بالكامل مع كافة سجلاته وأشعته؟')) return;
       patients = patients.filter(p => p.id !== currentPatientId);
       syncSave();
