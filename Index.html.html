@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عيادة اللؤلؤ السنية - النظام السحابي المتزامن</title>
+  
+  <!-- مكتبات Firebase الرسمية المتوافقة مع المتصفح مباشرة -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --whatsapp: #25d366;
+    }
+
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); margin: 0; padding: 12px; }
+
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--surface); padding: 12px 18px; border-radius: 12px;
+      border: 1px solid var(--border); margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.25rem; color: var(--primary); }
+
+    .btn {
+      background: var(--primary); color: #fff; border: none; padding: 8px 14px;
+      border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-accent { background: #8b5cf6; color: white; }
+    .btn-wa { background: var(--whatsapp); color: white; }
+    .btn-sm { padding: 4px 8px; font-size: 0.78rem; }
+
+    .sync-status {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem;
+      padding: 4px 10px; border-radius: 20px; background: #f1f5f9; font-weight: 600;
+    }
+    .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+    .sync-dot.connected { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+    .container { display: grid; grid-template-columns: 310px 1fr; gap: 14px; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; margin-bottom: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%; padding: 8px 10px; margin-top: 4px; margin-bottom: 10px;
+      border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;
+    }
+
+    .patient-list { max-height: 600px; overflow-y: auto; }
+    .patient-item {
+      padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+      margin-bottom: 8px; cursor: pointer; transition: 0.2s; background: #fff;
+    }
+    .patient-item:hover, .patient-item.active {
+      background: #e0f2fe; border-color: var(--primary);
+    }
+    .patient-item h4 { margin: 0 0 4px 0; font-size: 0.92rem; }
+    .patient-item p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+
+    .quick-notes-banner {
+      background: #fefce8; border: 1px solid #fef08a; border-radius: 8px;
+      padding: 10px; margin-bottom: 12px;
+    }
+    .quick-notes-banner textarea {
+      background: transparent; border: 1px dashed #ca8a04; margin: 4px 0 0 0;
+      color: #713f12; font-size: 0.88rem;
+    }
+
+    .dental-chart-wrapper {
+      direction: ltr; overflow-x: auto; padding: 14px 10px;
+      background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
+      border-radius: 12px; border: 1px solid var(--border);
+    }
+    .chart-header-labels {
+      display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem;
+      color: var(--primary); padding: 0 25px 8px 25px; border-bottom: 1px dashed #cbd5e1;
+      margin-bottom: 12px; direction: ltr;
+    }
+    .arch-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 6px; min-width: 860px; }
+    .arch-quadrant { display: flex; gap: 3px; }
+    .midline-separator {
+      width: 2px; background: linear-gradient(to bottom, #94a3b8, #cbd5e1); margin: 0 8px; border-radius: 2px;
+    }
+
+    .tooth-anatomical-unit {
+      display: flex; flex-direction: column; align-items: center; cursor: pointer;
+      padding: 6px 3px; border-radius: 8px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      min-width: 48px; background: rgba(255,255,255,0.6); border: 1px solid transparent;
+    }
+    .tooth-anatomical-unit:hover {
+      background: #ffffff; transform: translateY(-4px); box-shadow: 0 6px 14px rgba(2, 132, 199, 0.15);
+      border-color: #bae6fd;
+    }
+    .tooth-svg-wrap { width: 42px; height: 74px; display: flex; align-items: center; justify-content: center; }
+    .tooth-svg-wrap svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.12)); }
+    .tooth-fdi-label { font-weight: 800; font-size: 0.82rem; margin: 4px 0 2px 0; color: #1e293b; }
+    .tooth-status-pill {
+      font-size: 0.65rem; border-radius: 6px; padding: 2px 6px; font-weight: 700;
+      text-align: center; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .xray-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .xray-thumb {
+      width: 95px; height: 95px; object-fit: cover; border-radius: 8px;
+      border: 1px solid var(--border); cursor: pointer; transition: 0.2s;
+    }
+    .xray-thumb:hover { transform: scale(1.04); border-color: var(--primary); }
+    .xray-item { position: relative; display: inline-block; }
+    .xray-del {
+      position: absolute; top: 2px; right: 2px; background: rgba(239,68,68,0.85);
+      color: white; border: none; border-radius: 50%; width: 20px; height: 20px;
+      font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; }
+    th, td { border: 1px solid var(--border); padding: 8px; text-align: right; }
+    th { background: #f1f5f9; }
+
+    .currency-tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; font-weight: bold; }
+    .badge-in { color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
+    .badge-out { color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
+
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      align-items: center; justify-content: center; z-index: 1000; overflow-y: auto; padding: 10px;
+    }
+    .modal-content {
+      background: #fff; border-radius: 12px; padding: 18px; width: 100%;
+      max-width: 580px; max-height: 90vh; overflow-y: auto;
+    }
+
+    .endo-box { background: #fffbeb; border: 1px dashed #d97706; padding: 10px; border-radius: 8px; margin-bottom: 12px; display: none; }
+    .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .filter-btn {
+      background: #f1f5f9; border: 1px solid var(--border); padding: 6px 12px;
+      border-radius: 6px; font-size: 0.8rem; cursor: pointer;
+    }
+    .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .patient-balance-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; margin-left: 6px; font-weight: bold; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printablePrescription, #printablePrescription * { visibility: visible; }
+      #printablePrescription { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- تعاريف تدرجات الألوان 3D -->
+  <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1">
+    <defs>
+      <linearGradient id="toothEnamelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff"/><stop offset="35%" stop-color="#fdfbf7"/>
+        <stop offset="70%" stop-color="#f3ede2"/><stop offset="100%" stop-color="#e2d7c5"/>
+      </linearGradient>
+      <linearGradient id="toothRootGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fef8ee"/><stop offset="50%" stop-color="#eddcc6"/><stop offset="100%" stop-color="#d4bca2"/>
+      </linearGradient>
+      <radialGradient id="cariesGrad" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="#450a0a"/><stop offset="45%" stop-color="#991b1b"/>
+        <stop offset="85%" stop-color="#dc2626"/><stop offset="100%" stop-color="#f87171"/>
+      </radialGradient>
+      <linearGradient id="fillingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#e0e7ff"/><stop offset="40%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4338ca"/>
+      </linearGradient>
+      <linearGradient id="crownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fef08a"/><stop offset="30%" stop-color="#facc15"/>
+        <stop offset="70%" stop-color="#ca8a04"/><stop offset="100%" stop-color="#854d0e"/>
+      </linearGradient>
+      <linearGradient id="veneerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ccfbf1"/><stop offset="40%" stop-color="#2dd4bf"/><stop offset="100%" stop-color="#0f766e"/>
+      </linearGradient>
+      <linearGradient id="endoPulpGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#ea580c"/><stop offset="50%" stop-color="#f97316"/><stop offset="100%" stop-color="#c2410c"/>
+      </linearGradient>
+      <linearGradient id="glassGloss" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+        <stop offset="50%" stop-color="#ffffff" stop-opacity="0.1"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <header>
+    <div>
+      <h1>عيادة اللؤلؤ السنية</h1>
+      <small style="color: var(--text-muted)">النظام السحابي المتزامن</small>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <div class="sync-status">
+        <span class="sync-dot" id="syncIndicator"></span>
+        <span id="syncText">جاري الاتصال بالسحابة...</span>
+      </div>
+      <button class="btn" style="background:#059669;" onclick="openClinicScheduleModal()">📅 المواعيد</button>
+      <button class="btn btn-wa" onclick="openTomorrowReminders()">💬 تذكيرات الغد</button>
+      <button class="btn btn-accent" onclick="openFinancialDashboard()">📊 المالية</button>
+      <button class="btn btn-secondary" onclick="exportData()">💾 نسخة محلية</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div>
+      <div class="card">
+        <button class="btn" style="width: 100%; margin-bottom: 10px;" onclick="openPatientModal()">+ إضافة مريض جديد</button>
+        <input type="text" id="searchBox" placeholder="بحث بالاسم أو الهاتف..." oninput="filterPatients()">
+        <div class="patient-list" id="patientsListContainer"></div>
+      </div>
+    </div>
+
+    <div id="patientDetailsSection" style="display: none;">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h2 id="viewName" style="margin: 0 0 4px 0; color: var(--primary); display: inline-block;"></h2>
+            <button class="btn btn-secondary btn-sm" style="margin-right: 8px;" onclick="openEditPatientModal()">✏️ تعديل الملف</button>
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;">
+              <span id="viewPhone"></span> | <span id="viewAge"></span> سنة | <span id="viewGender"></span>
+            </div>
+            <div id="viewMedical" style="margin-top: 6px; font-size: 0.85rem; font-weight: bold; color: #b91c1c;"></div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteCurrentPatient()">حذف الملف</button>
+        </div>
+
+        <div class="quick-notes-banner" style="margin-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong style="font-size: 0.85rem; color: #854d0e;">📌 ملاحظات سريرية سريعة (تتزامن لحظياً):</strong>
+            <span id="quickNotesSavedIndicator" style="font-size: 0.75rem; color: #166534; display: none;">تمت المزامنة ✓</span>
+          </div>
+          <textarea id="patientQuickNotes" rows="2" placeholder="اكتب هنا أي ملاحظة سريعة..." oninput="autoSaveQuickNotes()"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0;">مواعيد المريض (محددة بالساعة والتاريخ)</h3>
+          <button class="btn" onclick="openAppointmentModal()">+ حجز موعد جديد</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>الساعة</th>
+              <th>الإجراء المتوقع</th>
+              <th>الحالة</th>
+              <th>الرزنامة والتذكير</th>
+            </tr>
+          </thead>
+          <tbody id="appointmentsTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0;">🦷 مخطط الأسنان السريري ثلاثي الأبعاد (3D FDI Chart)</h3>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">يسار الشاشة = يمين المريض</span>
+        </div>
+        
+        <div class="dental-chart-wrapper">
+          <div class="chart-header-labels">
+            <span>RIGHT (يمين المريض - Q1 / Q4)</span>
+            <span>MIDLINE</span>
+            <span>LEFT (يسار المريض - Q2 / Q3)</span>
+          </div>
+
+          <div class="arch-row">
+            <div class="arch-quadrant" id="quadrant1"></div>
+            <div class="midline-separator"></div>
+            <div class="arch-quadrant" id="quadrant2"></div>
+          </div>
+
+          <div style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin: 6px 0; direction: rtl; font-weight: bold;">
+            — المستوى الإطباقي (Occlusal Plane) —
+          </div>
+
+          <div class="arch-row">
+            <div class="arch-quadrant" id="quadrant4"></div>
+            <div class="midline-separator"></div>
+            <div class="arch-quadrant" id="quadrant3"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0;">صور الأشعة والفحص السريري (X-Rays)</h3>
+          <label class="btn" style="cursor: pointer;">
+            📷 إضافة صورة أشعة
+            <input type="file" id="xrayInput" accept="image/*" style="display: none;" onchange="uploadXray(event)">
+          </label>
+        </div>
+        <div class="xray-grid" id="xrayGridContainer"></div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0; color: var(--primary);">📝 سجل الجلسات والإجراءات السريرية</h3>
+          <button class="btn" onclick="openClinicalSessionModal()">+ تسجيل إجراء سريري</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ والساعة</th>
+              <th>السن / المنطقة</th>
+              <th>الإجراء السريري والملاحظات الفنية</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="clinicalSessionsTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0; color: #8b5cf6;">💊 الوصفات الطبية (Prescriptions)</h3>
+          <button class="btn btn-accent" onclick="openPrescriptionModal()">+ تحرير وصفة دوائية جديدة</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>الأدوية الموصوفة والجرعات</th>
+              <th>ملاحظات الصيدلاني / المريض</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="prescriptionsTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h3 style="margin: 0; color: #059669;">💰 المعاملات والمدفوعات المالية</h3>
+            <div id="patientBalanceSummary" style="margin-top: 4px;"></div>
+          </div>
+          <button class="btn" style="background:#059669;" onclick="openPaymentModal()">+ تسجيل حركة مالية</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>نوع الحركة المالية</th>
+              <th>المبلغ</th>
+              <th>العملة</th>
+              <th>البيان والملاحظات</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="paymentsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- النوافذ المنبثقة -->
+  <div class="modal" id="scheduleModal">
+    <div class="modal-content" style="max-width: 800px;">
+      <h3 style="margin-top: 0; color: var(--primary);">📅 جدول المخطط الكامل لمواعيد العيادة</h3>
+      <div class="filter-tabs">
+        <button class="filter-btn active" onclick="setScheduleFilter('today', this)">اليوم</button>
+        <button class="filter-btn" onclick="setScheduleFilter('current_week', this)">الأسبوع الحالي</button>
+        <button class="filter-btn" onclick="setScheduleFilter('next_week', this)">الأسبوع القادم</button>
+        <button class="filter-btn" onclick="setScheduleFilter('next_month', this)">الشهر القادم</button>
+        <button class="filter-btn" onclick="setScheduleFilter('last_month', this)">الشهر الماضي</button>
+        <button class="filter-btn" onclick="setScheduleFilter('all', this)">عرض الكل</button>
+      </div>
+      <div style="max-height: 450px; overflow-y: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ والساعة</th>
+              <th>اسم المريض</th>
+              <th>الهاتف</th>
+              <th>الإجراء المتوقع</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleTableBody"></tbody>
+        </table>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="patientModal">
+    <div class="modal-content">
+      <h3 style="margin-top: 0;">إضافة مريض جديد</h3>
+      <label>الاسم الكامل:</label>
+      <input type="text" id="pName" required>
+      <label>رقم الهاتف:</label>
+      <input type="tel" id="pPhone" placeholder="09xxxxxxxx أو الرمز الدولي">
+      <div style="display: flex; gap: 8px;">
+        <div style="flex: 1;"><label>العمر:</label><input type="number" id="pAge"></div>
+        <div style="flex: 1;">
+          <label>الجنس:</label>
+          <select id="pGender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select>
+        </div>
+      </div>
+      <label>السوابق المرضية والتحسسات:</label>
+      <textarea id="pMedical" rows="2" placeholder="سكري، ضغط، حساسية أدوية، نزف..."></textarea>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+        <button class="btn" onclick="savePatient()">حفظ الملف</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editPatientModal">
+    <div class="modal-content">
+      <h3 style="margin-top: 0; color: var(--primary);">✏️ تعديل بيانات المريض</h3>
+      <label>اسم المريض:</label><input type="text" id="editPName" required>
+      <label>رقم الهاتف:</label><input type="tel" id="editPPhone">
+      <div style="display: flex; gap: 8px;">
+        <div style="flex: 1;"><label>العمر:</label><input type="number" id="editPAge"></div>
+        <div style="flex: 1;">
+          <label>الجنس:</label>
+          <select id="editPGender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select>
+        </div>
+      </div>
+      <label>السوابق المرضية والحساسية:</label><textarea id="editPMedical" rows="2"></textarea>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+        <button class="btn" onclick="saveEditedPatient()">حفظ التعديلات</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="appointmentModal">
+    <div class="modal-content">
+      <h3 style="margin-top: 0;">حجز وتحديد موعد للمريض</h3>
+      <label>تاريخ الموعد:</label><input type="date" id="aptDate">
+      <label>الساعة المحددة بالدقيقة:</label><input type="time" id="aptTime" value="16:00">
+      <label>الإجراء المتوقع / السن المعني:</label><input type="text" id="aptProcedure" placeholder="حشو جذور، تاج، قلع...">
+      <label>حالة الموعد:</label>
+      <select id="aptStatus">
+        <option value="قادم">موعد قادم</option>
+        <option value="مكتمل">تم الحضور (مكتمل)</option>
+        <option value="ملغى">اعتذر المريض (ملغى)</option>
+      </select>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+        <button class="btn" onclick="saveAppointment()">حفظ الموعد</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="clinicalModal">
+    <div class="modal-content">
+      <h3 style="margin-top: 0; color: var(--primary);">تسجيل إجراء سريري</h3>
+      <div style="display: flex; gap: 8px;">
+        <div style="flex: 1.5;"><label>التاريخ:</label><input type="date" id="cDate"></div>
+        <div style="flex: 1;"><label>الساعة:</label><input type="time" id="cTime"></div>
+      </div>
+      <label>رقم السن / الأسنان:</label><input type="text" id="cTooth" placeholder="مثلاً: 16، 21">
+      <label>الإجراء السريري وتفاصيل المعالجة:</label>
+      <textarea id="cProcedure" rows="3" placeholder="تحضير أقنية، نوع الحشوة، تخدير..."></textarea>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+        <button class="btn" onclick="saveClinicalSession()">حفظ الإجراء</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="paymentModal">
+    <div class="modal-content">
+      <h3 id="paymentModalTitle" style="margin-top: 0; color: #059669;">تسجيل حركة مالية</h3>
+      <input type="hidden" id="editingPaymentIdx" value="-1">
+      <label>تاريخ الحركة:</label><input type="date" id="payDate">
+      <label>النوع:</label>
+      <select id="payType">
+        <option value="cost">تسجيل تكلفة معالجة متفق عليها</option>
+        <option value="payment">تسديد دفعة مقبوضة</option>
+      </select>
+      <div style="display: flex; gap: 8px;">
+        <div style="flex: 1.2;">
+          <label>العملة:</label>
+          <select id="payCurrency">
+            <option value="USD">دولار ($)</option>
+            <option value="TRY">تركي (₺)</option>
+            <option value="SYP">سوري (ل.س)</option>
+          </select>
+        </div>
+        <div style="flex: 1.5;"><label>المبلغ:</label><input type="number" id="payAmount" value="0"></div>
+      </div>
+      <label>البيان / ملاحظات الدفعة:</label><input type="text" id="payNote" placeholder="دفعة أولى، تسديد حساب...">
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+        <button class="btn" style="background:#059669;" onclick="savePaymentEntry()">حفظ الحركة</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="toothModal">
+    <div class="modal-content">
+      <h3 id="modalToothTitle" style="margin-top: 0;"></h3>
+      <label>الحالة السريرية:</label>
+      <select id="tStatus" onchange="toggleEndoSection()">
+        <option value="sound">سليم (Sound Tooth)</option>
+        <option value="caries">نخر / تسوس (Caries)</option>
+        <option value="filling">حشوة (Restoration)</option>
+        <option value="fracture">كسر سن (Fractured)</option>
+        <option value="restoration">ترميم / بناء (Core Build-up)</option>
+        <option value="aesthetic">تجميل / فينير (Veneer)</option>
+        <option value="endo">معالجة لبية (Root Canal)</option>
+        <option value="reendo">إعادة معالجة لبية (Retreatment)</option>
+        <option value="crown">تاج / جسر (Crown)</option>
+        <option value="missing">مقلوع / غائب (Missing)</option>
+      </select>
+      <div id="endoSection" class="endo-box">
+        <strong style="color: #92400e; font-size: 0.85rem;">أطوال العمل وتوسيع الأقنية:</strong>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+          <input type="text" id="canal1" placeholder="القناة 1 (MB: 20mm #25)">
+          <input type="text" id="canal2" placeholder="القناة 2 (ML: 19.5mm #25)">
+          <input type="text" id="canal3" placeholder="القناة 3 (D: 21mm #30)">
+          <input type="text" id="canal4" placeholder="القناة 4 (DB/MB2)">
+        </div>
+      </div>
+      <label>ملاحظات السن:</label><textarea id="tNotes" rows="2"></textarea>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+        <button class="btn" onclick="saveToothState()">حفظ حالة السن</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="prescriptionModal">
+    <div class="modal-content">
+      <h3 style="margin-top: 0; color: #8b5cf6;">💊 تحرير وصفة دوائية</h3>
+      <label>التاريخ:</label><input type="date" id="rxDate">
+      <label>الأدوية والجرعات:</label><textarea id="rxMedicines" rows="4"></textarea>
+      <label>تعليمات خاصة:</label><input type="text" id="rxInstructions">
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+        <button class="btn btn-accent" onclick="savePrescription()">حفظ الوصفة</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="financeModal">
+    <div class="modal-content" style="max-width: 650px;">
+      <h3 style="margin-top: 0; color: var(--primary);">📊 التقارير المالية للعيادة</h3>
+      <div class="filter-tabs">
+        <button class="filter-btn active" onclick="setFinanceTimeframe('this_month', this)">الشهر الحالي</button>
+        <button class="filter-btn" onclick="setFinanceTimeframe('last_month', this)">الشهر الماضي</button>
+        <button class="filter-btn" onclick="setFinanceTimeframe('this_year', this)">السنة الحالية</button>
+        <button class="filter-btn" onclick="setFinanceTimeframe('last_year', this)">السنة الماضية</button>
+        <button class="filter-btn" onclick="setFinanceTimeframe('all_time', this)">الإجمالي العام</button>
+      </div>
+      <div id="financeSummaryContainer"></div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="remindersModal">
+    <div class="modal-content">
+      <h3 style="margin-top: 0; color: var(--whatsapp);">💬 تذكيرات مواعيد الغد</h3>
+      <p id="remindersDateHeader" style="font-size: 0.85rem; color: var(--text-muted); margin-top: -6px;"></p>
+      <div id="tomorrowRemindersList"></div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+        <button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="printablePrescription" style="display: none; padding: 30px; font-family: sans-serif; direction: rtl;">
+    <div style="border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between;">
+      <div><h2 style="margin: 0; color: #0284c7;">عيادة اللؤلؤ السنية</h2><small>طب وجراحة وتجميل الفم والأسنان</small></div>
+      <div>التاريخ: <b id="prnDate"></b></div>
+    </div>
+    <div style="margin-bottom: 15px; font-size: 0.95rem; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;">
+      اسم المريض: <b id="prnPatientName"></b> | العمر: <span id="prnPatientAge"></span>
+    </div>
+    <div style="font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; color: #0284c7;">℞</div>
+    <div id="prnMedicines" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.8; margin-bottom: 30px;"></div>
+    <div id="prnNotes" style="font-size: 0.85rem; color: #475569; margin-bottom: 40px;"></div>
+    <div style="text-align: left; margin-top: 50px;"><span>توقيع الطبيب: _______________</span></div>
+  </div>
+
+  <div class="modal" id="imagePreviewModal" onclick="this.style.display='none'">
+    <div style="max-width: 90%; max-height: 90%;">
+      <img id="previewImageTag" src="" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // ⚙️ إعدادات المشروع المسجلة رسمياً
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBko85Ru-pe_4jtEcqFDGuR1fKp9WBRPmE",
+      authDomain: "pearl-dental-clinic-364de.firebaseapp.com",
+      databaseURL: "https://pearl-dental-clinic-364de-default-rtdb.firebaseio.com",
+      projectId: "pearl-dental-clinic-364de",
+      storageBucket: "pearl-dental-clinic-364de.firebasestorage.app",
+      messagingSenderId: "403760809026",
+      appId: "1:403760809026:web:848c1bf9a1cf5c33a9d9db",
+      measurementId: "G-PP89V98VPQ"
+    };
+
+    let db = null;
+    let dbRef = null;
+    let patients = [];
+    let currentPatientId = null;
+    let selectedToothNum = null;
+    let currentScheduleFilter = 'today';
+    let currentFinanceTimeframe = 'this_month';
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      dbRef = db.ref('patients_data');
+
+      // الاستماع للبيانات وتحديثها تلقائياً على كل الشاشات
+      dbRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        patients = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+        updateSyncIndicator(true);
+        renderPatientList(document.getElementById('searchBox').value.trim());
+
+        if (currentPatientId) {
+          const updatedCurrent = patients.find(p => p.id === currentPatientId);
+          if (updatedCurrent) selectPatient(currentPatientId, false);
+        }
+      }, (error) => {
+        console.error("Firebase sync error:", error);
+        updateSyncIndicator(false);
+      });
+    } catch (e) {
+      console.warn("Firebase fallback:", e);
+      patients = JSON.parse(localStorage.getItem('dental_clinic_data_v7') || '[]');
+      updateSyncIndicator(false);
+    }
+
+    function updateSyncIndicator(isConnected) {
+      const dot = document.getElementById('syncIndicator');
+      const text = document.getElementById('syncText');
+      if (isConnected) {
+        dot.className = 'sync-dot connected';
+        text.innerText = 'متصل بالسحابة (متزامن)';
+        text.style.color = '#166534';
+      } else {
+        dot.className = 'sync-dot';
+        text.innerText = 'غير متصل (وضع محلي)';
+        text.style.color = '#64748b';
+      }
+    }
+
+    function syncSave() {
+      localStorage.setItem('dental_clinic_data_v7', JSON.stringify(patients));
+      if (dbRef) {
+        dbRef.set(patients).catch(err => console.error("Cloud write error:", err));
+      }
+    }
+
+    // FDI Quadrants
+    const Q1_FDI = [18, 17, 16, 15, 14, 13, 12, 11];
+    const Q2_FDI = [21, 22, 23, 24, 25, 26, 27, 28];
+    const Q4_FDI = [48, 47, 46, 45, 44, 43, 42, 41];
+    const Q3_FDI = [31, 32, 33, 34, 35, 36, 37, 38];
+
+    const statusLabels = {
+      sound: "سليم", caries: "نخر", filling: "حشوة", fracture: "كسر",
+      restoration: "ترميم", aesthetic: "تجميل", endo: "لبية",
+      reendo: "إعادة لبية", crown: "تاج", missing: "مفقود"
+    };
+
+    const statusPillStyles = {
+      sound:       { text: "#475569", bg: "#f1f5f9", border: "#cbd5e1" },
+      caries:      { text: "#991b1b", bg: "#fee2e2", border: "#ef4444" },
+      filling:     { text: "#3730a3", bg: "#e0e7ff", border: "#6366f1" },
+      fracture:    { text: "#9a3412", bg: "#ffedd5", border: "#f97316" },
+      restoration: { text: "#6b21a8", bg: "#f3e8ff", border: "#a855f7" },
+      aesthetic:   { text: "#115e59", bg: "#ccfbf1", border: "#14b8a6" },
+      endo:        { text: "#854d0e", bg: "#fef3c7", border: "#f59e0b" },
+      reendo:      { text: "#9d174d", bg: "#fce7f3", border: "#ec4899" },
+      crown:       { text: "#166534", bg: "#dcfce7", border: "#22c55e" },
+      missing:     { text: "#94a3b8", bg: "#f1f5f9", border: "#cbd5e1" }
+    };
+
+    function renderPatientList(filter = '') {
+      const container = document.getElementById('patientsListContainer');
+      container.innerHTML = '';
+      const list = patients.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()) || (p.phone && p.phone.includes(filter)));
+
+      list.forEach(p => {
+        const div = document.createElement('div');
+        div.className = `patient-item ${p.id === currentPatientId ? 'active' : ''}`;
+        div.innerHTML = `
+          <h4>${p.name}</h4>
+          <p>${p.phone || 'بدون هاتف'} - ${p.gender || ''}</p>
+        `;
+        div.onclick = () => selectPatient(p.id);
+        container.appendChild(div);
+      });
+    }
+
+    function filterPatients() {
+      renderPatientList(document.getElementById('searchBox').value.trim());
+    }
+
+    function selectPatient(id, updateList = true) {
+      currentPatientId = id;
+      const p = patients.find(item => item.id === id);
+      if (!p) return;
+
+      document.getElementById('patientDetailsSection').style.display = 'block';
+      document.getElementById('viewName').innerText = p.name;
+      document.getElementById('viewPhone').innerText = p.phone ? `هاتف: ${p.phone}` : 'بدون هاتف';
+      document.getElementById('viewAge').innerText = p.age || '--';
+      document.getElementById('viewGender').innerText = p.gender || '';
+      document.getElementById('viewMedical').innerText = p.medical ? `⚠️ السوابق المرضية: ${p.medical}` : '';
+      document.getElementById('patientQuickNotes').value = p.quickNotes || '';
+
+      renderDentalChart(p);
+      renderAppointments(p);
+      renderClinicalSessions(p);
+      renderPrescriptions(p);
+      renderPayments(p);
+      renderXrays(p);
+      if (updateList) renderPatientList(document.getElementById('searchBox').value.trim());
+    }
+
+    function autoSaveQuickNotes() {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p) return;
+      p.quickNotes = document.getElementById('patientQuickNotes').value;
+      syncSave();
+
+      const ind = document.getElementById('quickNotesSavedIndicator');
+      ind.style.display = 'inline';
+      clearTimeout(window.notesSaveTimer);
+      window.notesSaveTimer = setTimeout(() => { ind.style.display = 'none'; }, 1500);
+    }
+
+    function openEditPatientModal() {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p) return;
+      document.getElementById('editPName').value = p.name || '';
+      document.getElementById('editPPhone').value = p.phone || '';
+      document.getElementById('editPAge').value = p.age || '';
+      document.getElementById('editPGender').value = p.gender || 'ذكر';
+      document.getElementById('editPMedical').value = p.medical || '';
+      document.getElementById('editPatientModal').style.display = 'flex';
+    }
+
+    function saveEditedPatient() {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p) return;
+      const newName = document.getElementById('editPName').value.trim();
+      if (!newName) return alert('يرجى كتابة الاسم');
+
+      p.name = newName;
+      p.phone = document.getElementById('editPPhone').value.trim();
+      p.age = document.getElementById('editPAge').value;
+      p.gender = document.getElementById('editPGender').value;
+      p.medical = document.getElementById('editPMedical').value.trim();
+
+      syncSave();
+      closeModals();
+      selectPatient(p.id);
+    }
+
+    function generateToothSVG(num, status, isUpper) {
+      const lastDigit = num % 10;
+      let toothType = 'molar';
+      if (lastDigit === 1 || lastDigit === 2) toothType = 'incisor';
+      else if (lastDigit === 3) toothType = 'canine';
+      else if (lastDigit === 4 || lastDigit === 5) toothType = 'premolar';
+      else toothType = 'molar';
+
+      const isMissing = (status === 'missing');
+      const opacity = isMissing ? '0.25' : '1';
+
+      let crownFill = "url(#toothEnamelGrad)";
+      let crownStroke = "#cbd5e1";
+      if (status === 'caries') { crownFill = "url(#cariesGrad)"; crownStroke = "#7f1d1d"; }
+      else if (status === 'filling') { crownFill = "url(#fillingGrad)"; crownStroke = "#3730a3"; }
+      else if (status === 'crown') { crownFill = "url(#crownGrad)"; crownStroke = "#854d0e"; }
+      else if (status === 'aesthetic') { crownFill = "url(#veneerGrad)"; crownStroke = "#0f766e"; }
+      else if (status === 'fracture') { crownFill = "url(#toothEnamelGrad)"; crownStroke = "#c2410c"; }
+      else if (status === 'restoration') { crownFill = "url(#fillingGrad)"; crownStroke = "#6b21a8"; }
+
+      let rootFill = "url(#toothRootGrad)";
+      let rootStroke = "#bcaaa4";
+
+      let endoCanalGraphic = '';
+      if (status === 'endo' || status === 'reendo') {
+        endoCanalGraphic = isUpper 
+          ? `<path d="M20 5 C20 5, 20 28, 20 40" stroke="url(#endoPulpGrad)" stroke-width="3" stroke-linecap="round"/>`
+          : `<path d="M20 59 C20 59, 20 36, 20 24" stroke="url(#endoPulpGrad)" stroke-width="3" stroke-linecap="round"/>`;
+      }
+
+      let anatomyPaths = '';
+
+      if (isUpper) {
+        if (toothType === 'incisor') {
+          anatomyPaths = `
+            <path d="M14 34 C13 18, 18 3, 20 3 C22 3, 27 18, 26 34 C24 35, 16 35, 14 34 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M10 34 C9 46, 12 65, 20 65 C28 65, 31 46, 30 34 C25 36, 15 36, 10 34 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M13 36 C13 46, 15 60, 18 60 C17 50, 15 38, 13 36 Z" fill="url(#glassGloss)"/>
+          `;
+        } else if (toothType === 'canine') {
+          anatomyPaths = `
+            <path d="M13 34 C12 14, 19 1, 20 1 C21 1, 28 14, 27 34 C24 35, 16 35, 13 34 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M9 34 C8 44, 20 68, 20 68 C20 68, 32 44, 31 34 C26 36, 14 36, 9 34 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M12 36 C12 44, 18 60, 19 60 C17 50, 14 40, 12 36 Z" fill="url(#glassGloss)"/>
+          `;
+        } else if (toothType === 'premolar') {
+          anatomyPaths = `
+            <path d="M13 32 C12 16, 16 4, 17 4 C18 4, 21 16, 20 32 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M19 32 C19 16, 23 4, 24 4 C25 4, 28 16, 27 32 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M8 32 C7 44, 11 64, 20 64 C29 64, 33 44, 32 32 C26 34, 14 34, 8 32 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M11 34 C11 44, 14 58, 17 58 C15 50, 13 40, 11 34 Z" fill="url(#glassGloss)"/>
+          `;
+        } else {
+          anatomyPaths = `
+            <path d="M9 30 C8 16, 12 4, 13 4 C14 4, 17 16, 16 30 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M18 30 C18 12, 20 2, 20 2 C21 2, 23 12, 22 30 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M23 30 C22 16, 26 4, 27 4 C28 4, 31 16, 30 30 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M5 30 C4 44, 8 66, 20 66 C32 66, 36 44, 35 30 C28 33, 12 33, 5 30 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M14 42 C18 46, 22 46, 26 42" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" fill="none"/>
+            <path d="M8 33 C8 44, 12 60, 16 60 C14 50, 10 40, 8 33 Z" fill="url(#glassGloss)"/>
+          `;
+        }
+      } else {
+        if (toothType === 'incisor') {
+          anatomyPaths = `
+            <path d="M14 36 C13 52, 18 67, 20 67 C22 67, 27 52, 26 36 C24 35, 16 35, 14 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M10 36 C9 24, 12 5, 20 5 C28 5, 31 24, 30 36 C25 34, 15 34, 10 36 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M13 34 C13 24, 15 10, 18 10 C17 20, 15 30, 13 34 Z" fill="url(#glassGloss)"/>
+          `;
+        } else if (toothType === 'canine') {
+          anatomyPaths = `
+            <path d="M13 36 C12 56, 19 69, 20 69 C21 69, 28 56, 27 36 C24 35, 16 35, 13 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M9 36 C8 26, 20 2, 20 2 C20 2, 32 26, 31 36 C26 34, 14 34, 9 36 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M12 34 C12 26, 18 10, 19 10 C17 20, 14 30, 12 34 Z" fill="url(#glassGloss)"/>
+          `;
+        } else if (toothType === 'premolar') {
+          anatomyPaths = `
+            <path d="M13 36 C12 54, 18 67, 20 67 C22 67, 28 54, 27 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M8 36 C7 24, 11 6, 20 6 C29 6, 33 24, 32 36 C26 34, 14 34, 8 36 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M11 34 C11 24, 14 12, 17 12 C15 20, 13 30, 11 34 Z" fill="url(#glassGloss)"/>
+          `;
+        } else {
+          anatomyPaths = `
+            <path d="M9 36 C8 52, 13 67, 15 67 C16 67, 19 54, 18 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M21 36 C20 54, 24 67, 26 67 C27 67, 31 52, 30 36 Z" fill="${rootFill}" stroke="${rootStroke}" stroke-width="0.8"/>
+            <path d="M5 36 C4 22, 8 4, 20 4 C32 4, 36 22, 35 36 C28 34, 12 34, 5 36 Z" fill="${crownFill}" stroke="${crownStroke}" stroke-width="1.2"/>
+            <path d="M14 26 C18 22, 22 22, 26 26" stroke="rgba(0,0,0,0.18)" stroke-width="1.2" fill="none"/>
+            <path d="M8 34 C8 24, 12 10, 16 10 C14 20, 10 30, 8 34 Z" fill="url(#glassGloss)"/>
+          `;
+        }
+      }
+
+      const fractureLine = (status === 'fracture') ? `<path d="M10 40 L18 46 L24 40 L30 48" stroke="#ea580c" stroke-width="2.5" fill="none"/>` : '';
+      const missingCross = isMissing ? `<line x1="4" y1="4" x2="36" y2="66" stroke="#94a3b8" stroke-dasharray="3,3" stroke-width="2"/><line x1="36" y1="4" x2="4" y2="66" stroke="#94a3b8" stroke-dasharray="3,3" stroke-width="2"/>` : '';
+
+      return `
+        <svg viewBox="0 0 40 70" opacity="${opacity}">
+          ${anatomyPaths}
+          ${endoCanalGraphic}
+          ${fractureLine}
+          ${missingCross}
+        </svg>
+      `;
+    }
+
+    function renderDentalChart(patient) {
+      const q1 = document.getElementById('quadrant1');
+      const q2 = document.getElementById('quadrant2');
+      const q4 = document.getElementById('quadrant4');
+      const q3 = document.getElementById('quadrant3');
+
+      q1.innerHTML = ''; q2.innerHTML = ''; q4.innerHTML = ''; q3.innerHTML = '';
+
+      Q1_FDI.forEach(num => q1.appendChild(createAnatomicalToothElement(num, patient, true)));
+      Q2_FDI.forEach(num => q2.appendChild(createAnatomicalToothElement(num, patient, true)));
+      Q4_FDI.forEach(num => q4.appendChild(createAnatomicalToothElement(num, patient, false)));
+      Q3_FDI.forEach(num => q3.appendChild(createAnatomicalToothElement(num, patient, false)));
+    }
+
+    function createAnatomicalToothElement(num, patient, isUpper) {
+      const data = (patient.teeth && patient.teeth[num]) || { status: 'sound' };
+      const el = document.createElement('div');
+      el.className = 'tooth-anatomical-unit';
+      
+      const badgeText = statusLabels[data.status] || 'سليم';
+      const pillStyle = statusPillStyles[data.status] || statusPillStyles.sound;
+      
+      el.innerHTML = `
+        <div class="tooth-fdi-label">${num}</div>
+        <div class="tooth-svg-wrap">${generateToothSVG(num, data.status, isUpper)}</div>
+        <span class="tooth-status-pill" style="background:${pillStyle.bg}; color:${pillStyle.text}; border: 1px solid ${pillStyle.border};">
+          ${(data.status === 'endo' || data.status === 'reendo') ? '⚡ ' + badgeText : badgeText}
+        </span>
+      `;
+      el.onclick = () => openToothModal(num, data);
+      return el;
+    }
+
+    function toggleEndoSection() {
+      const status = document.getElementById('tStatus').value;
+      document.getElementById('endoSection').style.display = (status === 'endo' || status === 'reendo') ? 'block' : 'none';
+    }
+
+    function openToothModal(num, data) {
+      selectedToothNum = num;
+      document.getElementById('modalToothTitle').innerText = `إجراءات السن رقم: ${num}`;
+      document.getElementById('tStatus').value = data.status || 'sound';
+      document.getElementById('tNotes').value = data.notes || '';
+
+      const canals = data.canals || {};
+      document.getElementById('canal1').value = canals.c1 || '';
+      document.getElementById('canal2').value = canals.c2 || '';
+      document.getElementById('canal3').value = canals.c3 || '';
+      document.getElementById('canal4').value = canals.c4 || '';
+
+      toggleEndoSection();
+      document.getElementById('toothModal').style.display = 'flex';
+    }
+
+    function saveToothState() {
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      if (!patient.teeth) patient.teeth = {};
+
+      const status = document.getElementById('tStatus').value;
+      const toothObj = {
+        status: status,
+        notes: document.getElementById('tNotes').value.trim()
+      };
+
+      if (status === 'endo' || status === 'reendo') {
+        toothObj.canals = {
+          c1: document.getElementById('canal1').value.trim(),
+          c2: document.getElementById('canal2').value.trim(),
+          c3: document.getElementById('canal3').value.trim(),
+          c4: document.getElementById('canal4').value.trim(),
+        };
+      }
+
+      patient.teeth[selectedToothNum] = toothObj;
+      syncSave();
+      closeModals();
+      renderDentalChart(patient);
+    }
+
+    function renderPayments(patient) {
+      const tbody = document.getElementById('paymentsTableBody');
+      tbody.innerHTML = '';
+      const list = patient.payments || [];
+
+      const balances = { USD: { cost: 0, paid: 0 }, TRY: { cost: 0, paid: 0 }, SYP: { cost: 0, paid: 0 } };
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">لا توجد حركات مالية مسجلة.</td></tr>';
+      } else {
+        list.forEach((p, idx) => {
+          const isCost = p.type === 'cost';
+          const curr = p.currency || 'USD';
+          if (!balances[curr]) balances[curr] = { cost: 0, paid: 0 };
+          if (isCost) balances[curr].cost += (parseFloat(p.amount) || 0);
+          else balances[curr].paid += (parseFloat(p.amount) || 0);
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${p.date}</td>
+            <td><span class="${isCost ? 'badge-out' : 'badge-in'}">${isCost ? 'مطلوب (تكلفة)' : 'مقبوض (دفعة)'}</span></td>
+            <td><b>${Number(p.amount).toLocaleString()}</b></td>
+            <td><span class="currency-tag">${p.currency}</span></td>
+            <td>${p.note || '-'}</td>
+            <td style="display:flex; gap:4px; justify-content: flex-end;">
+              <button class="btn btn-secondary btn-sm" onclick="openEditPaymentModal(${idx})">✏️ تعديل</button>
+              <button class="btn btn-danger btn-sm" onclick="deletePayment(${idx})">✕</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      const summaryDiv = document.getElementById('patientBalanceSummary');
+      summaryDiv.innerHTML = '';
+      ['USD', 'TRY', 'SYP'].forEach(c => {
+        const item = balances[c];
+        const rem = item.cost - item.paid;
+        if (item.cost > 0 || item.paid > 0) {
+          const span = document.createElement('span');
+          span.className = 'patient-balance-badge';
+          span.style.background = rem > 0 ? '#fee2e2' : '#dcfce7';
+          span.style.color = rem > 0 ? '#991b1b' : '#166534';
+          span.innerText = `${c}: مسدد (${item.paid.toLocaleString()}) / الباقي (${rem.toLocaleString()})`;
+          summaryDiv.appendChild(span);
+        }
+      });
+    }
+
+    function openPaymentModal() {
+      document.getElementById('paymentModalTitle').innerText = 'تسجيل حركة مالية جديدة';
+      document.getElementById('editingPaymentIdx').value = '-1';
+      document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('payAmount').value = '';
+      document.getElementById('payNote').value = '';
+      document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    function openEditPaymentModal(idx) {
+      const p = patients.find(item => item.id === currentPatientId);
+      if (!p || !p.payments[idx]) return;
+      const pay = p.payments[idx];
+
+      document.getElementById('paymentModalTitle').innerText = 'تعديل الحركة المالية';
+      document.getElementById('editingPaymentIdx').value = idx;
+      document.getElementById('payDate').value = pay.date;
+      document.getElementById('payType').value = pay.type;
+      document.getElementById('payCurrency').value = pay.currency;
+      document.getElementById('payAmount').value = pay.amount;
+      document.getElementById('payNote').value = pay.note || '';
+
+      document.getElementById('paymentModal').style.display = 'flex';
+    }
+
+    function savePaymentEntry() {
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      if (!patient.payments) patient.payments = [];
+
+      const amt = parseFloat(document.getElementById('payAmount').value);
+      if (!amt || amt <= 0) return alert('يرجى إدخال مبلغ صحيح');
+
+      const editIdx = parseInt(document.getElementById('editingPaymentIdx').value);
+      const paymentObj = {
+        date: document.getElementById('payDate').value,
+        type: document.getElementById('payType').value,
+        currency: document.getElementById('payCurrency').value,
+        amount: amt,
+        note: document.getElementById('payNote').value.trim()
+      };
+
+      if (editIdx >= 0) patient.payments[editIdx] = paymentObj;
+      else patient.payments.unshift(paymentObj);
+
+      syncSave();
+      closeModals();
+      renderPayments(patient);
+    }
+
+    function deletePayment(idx) {
+      if (!confirm('حذف هذه الحركة المالية؟')) return;
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      patient.payments.splice(idx, 1);
+      syncSave();
+      renderPayments(patient);
+    }
+
+    function renderPrescriptions(patient) {
+      const tbody = document.getElementById('prescriptionsTableBody');
+      tbody.innerHTML = '';
+      const list = patient.prescriptions || [];
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">لا توجد وصفات طبية محررة بعد.</td></tr>';
+        return;
+      }
+
+      list.forEach((rx, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${rx.date}</b></td>
+          <td style="white-space:pre-line;">${rx.medicines}</td>
+          <td>${rx.instructions || '-'}</td>
+          <td style="display:flex; gap:4px; justify-content: flex-end;">
+            <button class="btn btn-secondary btn-sm" onclick="printPrescription(${idx})">🖨️ طباعة</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePrescription(${idx})">✕</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openPrescriptionModal() {
+      document.getElementById('rxDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('rxMedicines').value = '';
+      document.getElementById('rxInstructions').value = '';
+      document.getElementById('prescriptionModal').style.display = 'flex';
+    }
+
+    function savePrescription() {
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      if (!patient.prescriptions) patient.prescriptions = [];
+
+      const med = document.getElementById('rxMedicines').value.trim();
+      if (!med) return alert('يرجى كتابة أسماء الأدوية');
+
+      patient.prescriptions.unshift({
+        date: document.getElementById('rxDate').value,
+        medicines: med,
+        instructions: document.getElementById('rxInstructions').value.trim()
+      });
+
+      syncSave();
+      closeModals();
+      renderPrescriptions(patient);
+    }
+
+    function deletePrescription(idx) {
+      if (!confirm('حذف هذه الوصفة الطبية؟')) return;
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      patient.prescriptions.splice(idx, 1);
+      syncSave();
+      renderPrescriptions(patient);
+    }
+
+    function printPrescription(idx) {
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient || !patient.prescriptions[idx]) return;
+      const rx = patient.prescriptions[idx];
+
+      document.getElementById('prnDate').innerText = rx.date;
+      document.getElementById('prnPatientName').innerText = patient.name;
+      document.getElementById('prnPatientAge').innerText = patient.age ? `${patient.age} سنة` : '--';
+      document.getElementById('prnMedicines').innerText = rx.medicines;
+      document.getElementById('prnNotes').innerText = rx.instructions ? `ملاحظات: ${rx.instructions}` : '';
+
+      const printDiv = document.getElementById('printablePrescription');
+      printDiv.style.display = 'block';
+      window.print();
+      printDiv.style.display = 'none';
+    }
+
+    function openFinancialDashboard() {
+      document.getElementById('financeModal').style.display = 'flex';
+      renderFinancialReports();
+    }
+
+    function setFinanceTimeframe(timeframe, btn) {
+      currentFinanceTimeframe = timeframe;
+      document.querySelectorAll('#financeModal .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderFinancialReports();
+    }
+
+    function renderFinancialReports() {
+      const totals = { USD: { cost: 0, paid: 0 }, TRY: { cost: 0, paid: 0 }, SYP: { cost: 0, paid: 0 } };
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+
+      patients.forEach(p => {
+        (p.payments || []).forEach(pay => {
+          if (!pay.date) return;
+          const payDate = new Date(pay.date);
+          const pYear = payDate.getFullYear();
+          const pMonth = payDate.getMonth();
+
+          let match = false;
+          if (currentFinanceTimeframe === 'this_month') match = (pYear === currentYear && pMonth === currentMonth);
+          else if (currentFinanceTimeframe === 'last_month') {
+            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            match = (pYear === lastMonthYear && pMonth === lastMonth);
+          } else if (currentFinanceTimeframe === 'this_year') match = (pYear === currentYear);
+          else if (currentFinanceTimeframe === 'last_year') match = (pYear === currentYear - 1);
+          else match = true;
+
+          if (match) {
+            const curr = pay.currency || 'USD';
+            if (!totals[curr]) totals[curr] = { cost: 0, paid: 0 };
+            if (pay.type === 'cost') totals[curr].cost += (parseFloat(pay.amount) || 0);
+            else totals[curr].paid += (parseFloat(pay.amount) || 0);
+          }
+        });
+      });
+
+      const container = document.getElementById('financeSummaryContainer');
+      container.innerHTML = '';
+      const currencyNames = { USD: "الدولار الأمريكي ($)", TRY: "الليرة التركية (₺)", SYP: "الليرة السورية (ل.س)" };
+
+      ['USD', 'TRY', 'SYP'].forEach(c => {
+        const item = totals[c];
+        const balance = item.cost - item.paid;
+        const div = document.createElement('div');
+        div.style.cssText = "background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:10px;";
+        div.innerHTML = `
+          <h4 style="margin:0 0 6px 0; color:var(--primary);">${currencyNames[c]}</h4>
+          <div style="font-size:0.85rem; line-height: 1.6;">
+            <div>إجمالي تكلفة المعالجات: <b>${item.cost.toLocaleString()}</b></div>
+            <div style="color:var(--success);">إجمالي المقبوضات: <b>${item.paid.toLocaleString()}</b></div>
+            <div style="color:${balance > 0 ? 'var(--danger)' : 'var(--text-muted)'}; font-weight:bold;">
+              الديون المتبقية بذمة المرضى: ${balance.toLocaleString()}
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderClinicalSessions(patient) {
+      const tbody = document.getElementById('clinicalSessionsTableBody');
+      tbody.innerHTML = '';
+      const list = patient.clinicalSessions || [];
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">لا توجد جلسات سريرية مسجلة بعد.</td></tr>';
+        return;
+      }
+
+      list.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${s.date}</b> <small style="color:var(--text-muted);">${s.time || ''}</small></td>
+          <td><b>${s.tooth || '-'}</b></td>
+          <td>${s.procedure || '-'}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteClinicalSession(${idx})">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openClinicalSessionModal() {
+      const now = new Date();
+      document.getElementById('cDate').value = now.toISOString().split('T')[0];
+      document.getElementById('cTime').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      document.getElementById('cTooth').value = selectedToothNum || '';
+      document.getElementById('cProcedure').value = '';
+      document.getElementById('clinicalModal').style.display = 'flex';
+    }
+
+    function saveClinicalSession() {
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      if (!patient.clinicalSessions) patient.clinicalSessions = [];
+
+      patient.clinicalSessions.unshift({
+        date: document.getElementById('cDate').value,
+        time: document.getElementById('cTime').value,
+        tooth: document.getElementById('cTooth').value.trim(),
+        procedure: document.getElementById('cProcedure').value.trim()
+      });
+
+      syncSave();
+      closeModals();
+      renderClinicalSessions(patient);
+    }
+
+    function deleteClinicalSession(idx) {
+      if (!confirm('حذف هذا الإجراء السريري من السجل؟')) return;
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      patient.clinicalSessions.splice(idx, 1);
+      syncSave();
+      renderClinicalSessions(patient);
+    }
+
+    function openClinicScheduleModal() {
+      document.getElementById('scheduleModal').style.display = 'flex';
+      renderClinicSchedule();
+    }
+
+    function setScheduleFilter(filter, btn) {
+      currentScheduleFilter = filter;
+      document.querySelectorAll('#scheduleModal .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderClinicSchedule();
+    }
+
+    function renderClinicSchedule() {
+      const tbody = document.getElementById('scheduleTableBody');
+      tbody.innerHTML = '';
+      let allApts = [];
+
+      patients.forEach(p => {
+        (p.appointments || []).forEach(apt => {
+          allApts.push({
+            patientId: p.id, patientName: p.name, phone: p.phone,
+            date: apt.date, time: apt.time, procedure: apt.procedure, status: apt.status || 'قادم'
+          });
+        });
+      });
+
+      allApts.sort((a,b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
+      const filtered = allApts.filter(item => {
+        const itemDate = new Date(`${item.date}T00:00:00`);
+        const diffDays = Math.round((itemDate - today) / (1000 * 60 * 60 * 24));
+        if (currentScheduleFilter === 'today') return diffDays === 0;
+        if (currentScheduleFilter === 'current_week') return diffDays >= 0 && diffDays <= 7;
+        if (currentScheduleFilter === 'next_week') return diffDays >= 7 && diffDays <= 14;
+        if (currentScheduleFilter === 'next_month') return diffDays >= 0 && diffDays <= 30;
+        if (currentScheduleFilter === 'last_month') return diffDays < 0 && diffDays >= -30;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">لا توجد مواعيد تطابق الفلتر المحدد.</td></tr>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${item.date}</b> | ⏰ ${item.time}</td>
+          <td><b><a href="#" onclick="selectPatient('${item.patientId}'); closeModals(); return false;">${item.patientName}</a></b></td>
+          <td>${item.phone || '-'}</td>
+          <td>${item.procedure || '-'} <small style="color:var(--primary);">(${item.status})</small></td>
+          <td style="display:flex; gap:4px;">
+            <button class="btn btn-secondary btn-sm" onclick="openGCalendar('${item.patientName}', '${item.phone}', '${item.procedure}', '${item.date}', '${item.time}')">📅 تقويم</button>
+            <button class="btn btn-wa btn-sm" onclick="sendWhatsApp('${item.phone}', '${item.patientName}', '${item.date}', '${item.time}')">💬 واتساب</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openGCalendar(name, phone, procedure, dateStr, timeStr) {
+      const startDateTime = new Date(`${dateStr}T${timeStr}:00`);
+      const endDateTime = new Date(startDateTime.getTime() + (45 * 60000));
+      const fmt = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+      const title = encodeURIComponent(`عيادة أسنان: ${name}`);
+      const details = encodeURIComponent(`المريض: ${name}\nالهاتف: ${phone || 'غير مسجل'}\nالإجراء: ${procedure || 'معالجة'}`);
+      const dates = `${fmt(startDateTime)}/${fmt(endDateTime)}`;
+      window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`, '_blank');
+    }
+
+    function sendWhatsApp(phone, name, dateStr, timeStr) {
+      if (!phone) return alert('المريض لا يملك رقم هاتف مسجل.');
+      let cleanPhone = phone.replace(/[^0-9]/g, '');
+      if (cleanPhone.startsWith('09')) cleanPhone = '963' + cleanPhone.substring(1);
+      const msg = encodeURIComponent(`مرحباً أستاذ/ة ${name}، نذكركم بموعدكم القادم في عيادة اللؤلؤ السنية يوم ${dateStr} في تمام الساعة ${timeStr}. أهلاً وسهلاً بكم.`);
+      window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
+    }
+
+    function openTomorrowReminders() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      document.getElementById('remindersDateHeader').innerText = `المواعيد المجدولة ليوم غد (${tomorrowStr}):`;
+
+      const tomorrowApts = [];
+      patients.forEach(p => {
+        (p.appointments || []).forEach(apt => {
+          if (apt.date === tomorrowStr) tomorrowApts.push({ patient: p, apt: apt });
+        });
+      });
+
+      const container = document.getElementById('tomorrowRemindersList');
+      container.innerHTML = '';
+
+      if (tomorrowApts.length === 0) {
+        container.innerHTML = '<div style="padding:15px; text-align:center; color:var(--text-muted);">لا توجد أي مواعيد مسجلة ليوم الغد.</div>';
+      } else {
+        tomorrowApts.sort((a,b) => a.apt.time.localeCompare(b.apt.time));
+        tomorrowApts.forEach(item => {
+          const div = document.createElement('div');
+          div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid var(--border); padding:8px; border-radius:6px; margin-bottom:6px;";
+          div.innerHTML = `
+            <div>
+              <div style="font-weight:bold;">${item.patient.name}</div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">
+                ⏰ الساعة: <b>${item.apt.time}</b> | ${item.apt.procedure || 'معالجة'}
+              </div>
+            </div>
+            <button class="btn btn-wa btn-sm" onclick="sendWhatsApp('${item.patient.phone}', '${item.patient.name}', '${item.apt.date}', '${item.apt.time}')">
+              💬 إرسال تذكير
+            </button>
+          `;
+          container.appendChild(div);
+        });
+      }
+      document.getElementById('remindersModal').style.display = 'flex';
+    }
+
+    function renderAppointments(patient) {
+      const tbody = document.getElementById('appointmentsTableBody');
+      tbody.innerHTML = '';
+      const list = patient.appointments || [];
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">لا توجد مواعيد مسجلة لهذا المريض.</td></tr>';
+        return;
+      }
+
+      list.forEach((apt, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${apt.date}</b></td>
+          <td><b>${apt.time}</b></td>
+          <td>${apt.procedure || '-'}</td>
+          <td><span style="font-size:0.8rem; font-weight:bold;">${apt.status || 'قادم'}</span></td>
+          <td style="display:flex; gap:4px; justify-content: flex-end;">
+            <button class="btn btn-secondary btn-sm" onclick="openGCalendar('${patient.name}', '${patient.phone}', '${apt.procedure}', '${apt.date}', '${apt.time}')">📅 التقويم</button>
+            <button class="btn btn-wa btn-sm" onclick="sendWhatsApp('${patient.phone}', '${patient.name}', '${apt.date}', '${apt.time}')">💬 تذكير</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteAppointment(${idx})">✕</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openAppointmentModal() {
+      const now = new Date();
+      document.getElementById('aptDate').value = now.toISOString().split('T')[0];
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(Math.ceil(now.getMinutes() / 5) * 5).padStart(2, '0');
+      document.getElementById('aptTime').value = `${hours}:${minutes}`;
+      document.getElementById('aptProcedure').value = '';
+      document.getElementById('aptStatus').value = 'قادم';
+      document.getElementById('appointmentModal').style.display = 'flex';
+    }
+
+    function saveAppointment() {
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      if (!patient.appointments) patient.appointments = [];
+
+      const apt = {
+        date: document.getElementById('aptDate').value,
+        time: document.getElementById('aptTime').value,
+        procedure: document.getElementById('aptProcedure').value.trim(),
+        status: document.getElementById('aptStatus').value
+      };
+
+      if (!apt.date || !apt.time) return alert('يرجى تحديد التاريخ والساعة');
+
+      patient.appointments.push(apt);
+      patient.appointments.sort((a,b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+
+      syncSave();
+      closeModals();
+      renderAppointments(patient);
+
+      if (confirm('هل ترغب بإضافة هذا الموعد فوراً إلى Google Calendar على جهازك؟')) {
+        openGCalendar(patient.name, patient.phone, apt.procedure, apt.date, apt.time);
+      }
+    }
+
+    function deleteAppointment(idx) {
+      if (!confirm('حذف هذا الموعد؟')) return;
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      patient.appointments.splice(idx, 1);
+      syncSave();
+      renderAppointments(patient);
+    }
+
+    function renderXrays(patient) {
+      const container = document.getElementById('xrayGridContainer');
+      container.innerHTML = '';
+      if (!patient.xrays || patient.xrays.length === 0) {
+        container.innerHTML = '<span style="font-size:0.8rem; color:var(--text-muted);">لا توجد صور أشعة مرفقة بعد.</span>';
+        return;
+      }
+      patient.xrays.forEach((imgBase64, index) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'xray-item';
+        wrap.innerHTML = `
+          <img src="${imgBase64}" class="xray-thumb" onclick="previewImage('${imgBase64}')">
+          <button class="xray-del" onclick="deleteXray(${index})">✕</button>
+        `;
+        container.appendChild(wrap);
+      });
+    }
+
+    function uploadXray(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const patient = patients.find(p => p.id === currentPatientId);
+        if (!patient) return;
+        if (!patient.xrays) patient.xrays = [];
+        patient.xrays.push(event.target.result);
+        syncSave();
+        renderXrays(patient);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+
+    function deleteXray(index) {
+      if (!confirm('حذف صورة الأشعة هذه؟')) return;
+      const patient = patients.find(p => p.id === currentPatientId);
+      if (!patient) return;
+      patient.xrays.splice(index, 1);
+      syncSave();
+      renderXrays(patient);
+    }
+
+    function previewImage(src) {
+      document.getElementById('previewImageTag').src = src;
+      document.getElementById('imagePreviewModal').style.display = 'flex';
+    }
+
+    function openPatientModal() {
+      document.getElementById('pName').value = '';
+      document.getElementById('pPhone').value = '';
+      document.getElementById('pAge').value = '';
+      document.getElementById('pMedical').value = '';
+      document.getElementById('patientModal').style.display = 'flex';
+    }
+
+    function savePatient() {
+      const name = document.getElementById('pName').value.trim();
+      if (!name) return alert('الرجاء كتابة اسم المريض');
+
+      const newPatient = {
+        id: Date.now().toString(),
+        name: name,
+        phone: document.getElementById('pPhone').value.trim(),
+        age: document.getElementById('pAge').value,
+        gender: document.getElementById('pGender').value,
+        medical: document.getElementById('pMedical').value.trim(),
+        quickNotes: '',
+        teeth: {},
+        clinicalSessions: [],
+        prescriptions: [],
+        payments: [],
+        appointments: [],
+        xrays: []
+      };
+
+      patients.unshift(newPatient);
+      syncSave();
+      closeModals();
+      selectPatient(newPatient.id);
+    }
+
+    function deleteCurrentPatient() {
+      if (!confirm('حذف ملف المريض بالكامل مع كافة سجلاته وأشعته؟')) return;
+      patients = patients.filter(p => p.id !== currentPatientId);
+      syncSave();
+      currentPatientId = null;
+      document.getElementById('patientDetailsSection').style.display = 'none';
+      renderPatientList();
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    }
+
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(patients));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `pearl_dental_backup_${new Date().toISOString().slice(0,10)}.json`);
+      a.click();
+    }
+
+    renderPatientList();
+  </script>
+</body>
+</html>
