@@ -90,6 +90,7 @@
     .chip-btn[data-val="reendo"].active      { background: #db2777; border-color: #db2777; }
     .chip-btn[data-val="crown"].active       { background: #16a34a; border-color: #16a34a; }
     .chip-btn[data-val="missing"].active     { background: #64748b; border-color: #64748b; text-decoration: line-through; }
+    .chip-btn[data-val="implant"].active     { background: #0369a1; border-color: #0369a1; }
 
     .canal-stepper-card {
       background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px;
@@ -258,6 +259,13 @@
         <stop offset="0%" stop-color="#e0e7ff"/>
         <stop offset="40%" stop-color="#818cf8"/>
         <stop offset="100%" stop-color="#4338ca"/>
+      </linearGradient>
+      <!-- معدن التيتانيوم للزرعة السنية 3D -->
+      <linearGradient id="implantGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#475569"/>
+        <stop offset="30%" stop-color="#94a3b8"/>
+        <stop offset="70%" stop-color="#cbd5e1"/>
+        <stop offset="100%" stop-color="#334155"/>
       </linearGradient>
       <linearGradient id="crownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#fef08a"/>
@@ -597,6 +605,7 @@
         <div class="chip-btn" data-val="reendo" onclick="setToothStatusChip('reendo')">إعادة معالجة (Retreatment)</div>
         <div class="chip-btn" data-val="crown" onclick="setToothStatusChip('crown')">تاج / جسر (Crown)</div>
         <div class="chip-btn" data-val="missing" onclick="setToothStatusChip('missing')">مقلوع (Missing)</div>
+        <div class="chip-btn" data-val="implant" onclick="setToothStatusChip('implant')">زرعة سنية (Implant)</div>
       </div>
 
       <div id="endoSection" class="endo-box">
@@ -820,7 +829,7 @@
     const statusLabels = {
       sound: "سليم", caries: "نخر", filling: "حشوة", fracture: "كسر",
       restoration: "ترميم", aesthetic: "تجميل", endo: "لبية",
-      reendo: "إعادة لبية", crown: "تاج", missing: "مفقود"
+      reendo: "إعادة لبية", crown: "تاج", missing: "مفقود", implant: "زرعة"
     };
 
     function renderPatientList(filter = '') {
@@ -890,6 +899,31 @@
 
       const isMissing = (status === 'missing');
       const opacity = isMissing ? '0.22' : '1';
+
+      if (status === 'implant') {
+        const rootY = isUpper ? 6 : 38;
+        const crownY = isUpper ? 40 : 8;
+        return `
+          <svg viewBox="0 0 40 70" style="width:100%; height:100%;">
+            <!-- مسمار الزرعة اللولبي (Titanium Fixture) -->
+            <g transform="translate(0, ${rootY})">
+              <path d="M14 0 L26 0 L24 26 L16 26 Z" fill="url(#implantGrad)" stroke="#334155" stroke-width="0.8"/>
+              <!-- أسنان اللولب -->
+              <line x1="13" y1="5" x2="27" y2="5" stroke="#1e293b" stroke-width="1.2"/>
+              <line x1="14" y1="10" x2="26" y2="10" stroke="#1e293b" stroke-width="1.2"/>
+              <line x1="14" y1="15" x2="26" y2="15" stroke="#1e293b" stroke-width="1.2"/>
+              <line x1="15" y1="20" x2="25" y2="20" stroke="#1e293b" stroke-width="1.2"/>
+              <!-- قمة الزرعة الذروية -->
+              <path d="M16 26 L20 30 L24 26 Z" fill="#334155"/>
+            </g>
+            <!-- دعامة التاج فوق الزرعة (Abutment + Crown) -->
+            <g transform="translate(0, ${crownY})">
+              <rect x="17" y="${isUpper ? 0 : 20}" width="6" height="5" fill="#94a3b8" stroke="#334155"/>
+              <path d="M10 5 C9 16, 12 25, 20 25 C28 25, 31 16, 30 5 Z" fill="url(#toothEnamelGrad)" stroke="#0284c7" stroke-width="1.3"/>
+            </g>
+          </svg>
+        `;
+      }
 
       let crownFill = "url(#toothEnamelGrad)";
       let crownStroke = "#cbd5e1";
